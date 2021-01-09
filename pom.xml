@@ -30,7 +30,7 @@ under the License.
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<flink.version>1.11.2</flink.version>
+		<flink.version>1.12.0</flink.version>
 		<java.version>1.8</java.version>
 		<scala.binary.version>2.11</scala.binary.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
@@ -70,6 +70,19 @@ under the License.
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-clients_${scala.binary.version}</artifactId>
 			<version>${flink.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-core</artifactId>
+			<version>1.12-SNAPSHOT</version>
+<!--			<scope>provided</scope>-->
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-clients_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -85,8 +98,8 @@ under the License.
 
 		<dependency>
 		    <groupId>org.apache.flink</groupId>
-		    <artifactId>flink-connector-hbase_2.12</artifactId>
-		    <version>${flink.version}</version>
+		    <artifactId>flink-connector-hbase-new</artifactId>
+		    <version>1.12-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Add logging framework, to produce console output when running in the IDE. -->
@@ -95,19 +108,16 @@ under the License.
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<version>${log4j.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
 			<version>${log4j.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<version>${log4j.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 

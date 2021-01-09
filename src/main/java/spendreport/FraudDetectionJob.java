@@ -18,22 +18,10 @@
 
 package spendreport;
 
-import org.apache.flink.connector.hbase.sink.HBaseMutationConverter;
-import org.apache.flink.connector.hbase.sink.HBaseSinkFunction;
-import org.apache.flink.connector.hbase.source.HBaseTableSource;
-import org.apache.flink.connector.hbase.util.HBaseTableSchema;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.types.Row;
-import org.apache.flink.walkthrough.common.entity.Alert;
-import org.apache.flink.walkthrough.common.entity.Transaction;
-import org.apache.flink.walkthrough.common.source.TransactionSource;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * Skeleton code for the datastream walkthrough
@@ -42,59 +30,41 @@ public class FraudDetectionJob {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        Configuration config = HBaseConfiguration.create();
-        config.set("hbase.zookeeper.quorum", "localhost");
-        config.set("hbase.zookeeper.property.clientPort","2181");
+//        DataStream<String> names = env.readTextFile("file:///Users/moritzmanner/Projects/frauddetection/src/main/java/spendreport/names-10.txt");
+//        names.print();
+        NumberSequenceSource numberSequenceSource = new NumberSequenceSource(1, 10);
 
-        HBaseTableSource hBaseTableSource = new HBaseTableSource(config, "students");
-//        HBaseTableSchema schema = new HBaseTableSchema();
+        DataStream<Long> nums = env.fromSource(
+                numberSequenceSource,
+                WatermarkStrategy.noWatermarks(),
+                "nums");
+        nums.print();
+//        TypeInformation<String> typeInfo = TypeInformation.of(String.class);
+//        HbaseSource<String> source = new HbaseSource<>(Boundedness.BOUNDED);
+//        source.getBoundedness();
+//        DataStream<String> stream = env.fromSource(
+//                source,
+//                WatermarkStrategy.noWatermarks(),
+//                "HBaseSource",
+//                typeInfo
+//        );
+//        stream.print();
 
-//        schema.setRowKey("rowkey", byte[].class);
-//        schema.addColumn("name", "last_name", byte[].class);
 
-        hBaseTableSource.setRowKey("1", byte[].class);
-        hBaseTableSource.addColumn("name", "last_name", byte[].class);
+        //
+//        DataStream<String> parsed = names.map(
+//                new MapFunction<String, String>() {
+//                    @Override
+//                    public String map(String value) throws Exception {
+//                        int len = value.length();
+//                        return value + " " + len;
+//                    }
+//                }
+//        );
+//        parsed.writeAsText("file:///Users/moritzmanner/Projects/frauddetection/src/main/java/spendreport/parsed.txt").setParallelism(1);;
+//        parsed.print();
 
-        DataStream<Row> rowDataStream = hBaseTableSource.getDataStream(env);
-        rowDataStream.print();
-
-//        HBaseUpsertTableSink sink = new HBaseUpsertTableSink(schema, HBaseWriteOptions.builder().setBufferFlushIntervalMillis(1000).build());
-
-
-
-        HBaseMutationConverter<Alert> mutationConverter = new HBaseMutationConverter<Alert>() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void open() {
-            }
-
-            @Override
-            public Mutation convertToMutation(Alert alert) {
-                Put put = new Put(Bytes.toBytes("10"));
-                put.addImmutable(Bytes.toBytes("name"), Bytes.toBytes("first_name"), Bytes.toBytes("Mori"));
-
-                return put;
-            }
-        };
-
-        HBaseSinkFunction<Alert> hbaseSink = new HBaseSinkFunction<Alert>(
-                "students", config, mutationConverter, 10000, 2, 1000);
-
-        DataStream<Transaction> transactions = env
-                .addSource(new TransactionSource())
-                .name("transactions");
-
-        DataStream<Alert> alerts = transactions
-                .keyBy(Transaction::getAccountId)
-                .process(new FraudDetector())
-                .name("fraud-detector");
-
-        alerts
-                .addSink(hbaseSink)
-                .name("send-alerts");
-
-        env.execute("Fraud Detection");
+        env.execute("Word length mapper");
     }
 }
 
