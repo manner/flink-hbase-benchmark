@@ -19,7 +19,9 @@
 package spendreport;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.connector.source.Boundedness;
+import org.apache.flink.connector.hbase.source.HbaseSource;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -30,41 +32,17 @@ public class FraudDetectionJob {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-//        DataStream<String> names = env.readTextFile("file:///Users/moritzmanner/Projects/frauddetection/src/main/java/spendreport/names-10.txt");
-//        names.print();
-        NumberSequenceSource numberSequenceSource = new NumberSequenceSource(1, 10);
+        HbaseSource source = new HbaseSource(Boundedness.BOUNDED);
 
-        DataStream<Long> nums = env.fromSource(
-                numberSequenceSource,
+        DataStream<byte[]> stream = env.fromSource(
+                source,
                 WatermarkStrategy.noWatermarks(),
-                "nums");
-        nums.print();
-//        TypeInformation<String> typeInfo = TypeInformation.of(String.class);
-//        HbaseSource<String> source = new HbaseSource<>(Boundedness.BOUNDED);
-//        source.getBoundedness();
-//        DataStream<String> stream = env.fromSource(
-//                source,
-//                WatermarkStrategy.noWatermarks(),
-//                "HBaseSource",
-//                typeInfo
-//        );
-//        stream.print();
+                "HBaseSource"
+        );
+        stream.map((MapFunction<byte[], String>) String::new)
+                .print().setParallelism(1);
 
-
-        //
-//        DataStream<String> parsed = names.map(
-//                new MapFunction<String, String>() {
-//                    @Override
-//                    public String map(String value) throws Exception {
-//                        int len = value.length();
-//                        return value + " " + len;
-//                    }
-//                }
-//        );
-//        parsed.writeAsText("file:///Users/moritzmanner/Projects/frauddetection/src/main/java/spendreport/parsed.txt").setParallelism(1);;
-//        parsed.print();
-
-        env.execute("Word length mapper");
+        env.execute("HbaseTestJob");
     }
 }
 
