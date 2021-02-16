@@ -102,6 +102,12 @@ under the License.
 		    <version>1.12-SNAPSHOT</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-hbase-base_2.11</artifactId>
+			<version>1.12-SNAPSHOT</version>
+		</dependency>
+
 		<!-- Add logging framework, to produce console output when running in the IDE. -->
 		<!-- These dependencies are excluded from the application JAR by default. -->
 		<dependency>
