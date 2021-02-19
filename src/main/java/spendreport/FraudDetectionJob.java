@@ -20,7 +20,6 @@ package spendreport;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.connector.source.Boundedness;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.hbase.sink.HBaseSink;
@@ -63,14 +62,8 @@ public class FraudDetectionJob {
         configuration.setInt("replication.source.maxretriesmultiplier", 10);
         configuration.setBoolean("hbase.replication", true);
 
-        System.out.println(configuration.get("hbase.zookeeper.quorum"));
-        System.out.println(configuration.get("hbase.zookeeper.property.clientPort"));
-        System.out.println(configuration.get("hbase.master.info.port"));
-        System.out.println(configuration.get("hbase.master.port"));
-        System.out.println(configuration.get("hbase.master.info.port"));
-        System.out.println(configuration.get("hbase.master.info.port"));
-
         clearPeers(configuration);
+
         createSchema(configuration, DEFAULT_TABLE_NAME + "-in");
         createSchema(configuration, DEFAULT_TABLE_NAME + "-out");
 
@@ -84,18 +77,26 @@ public class FraudDetectionJob {
 //        35:14.146
 //        2021 - 02 - 16 T18:
 //        35:13.970
+
+        HBaseSourceDeserializer<Tuple2<String, String>> sourceDeserializer = new HBaseStringDeserializationSchema();
+
         HBaseSource<Tuple2<String, String>> source =
                 new HBaseSource<>(
                         Boundedness.CONTINUOUS_UNBOUNDED,
-                        new HBaseStringDeserializationSchema(),
+                        sourceDeserializer,
                         DEFAULT_TABLE_NAME + "-in",
                         configuration);
 
         DataStream<Tuple2<String, String>> stream =
-                env.fromSource(source, WatermarkStrategy.noWatermarks(), "HBaseSource", new HBaseStringDeserializationSchema().getProducedType());
+                env.fromSource(source, WatermarkStrategy.noWatermarks(), "HBaseSource", sourceDeserializer.getProducedType());
 
-        stream.map((MapFunction<Tuple2<String, String>, Tuple2<String, String>>) value -> new Tuple2<>(value.f0, "A_" + value.f1))
-                .returns(Types.TUPLE(Types.STRING, Types.STRING));
+        stream.map(new MapFunction<Tuple2<String, String>, Tuple2<String, String>>() {
+            @Override
+            public Tuple2<String, String> map(Tuple2<String, String> value) throws Exception {
+                return new Tuple2<>(value.f0, "BBB");
+            }
+        });
+//                .returns(Types.TUPLE(Types.STRING, Types.STRING));
 
         HBaseSink<Tuple2<String, String>> sink =
                 new HBaseSink<>(
@@ -110,15 +111,17 @@ public class FraudDetectionJob {
 
     public static void createSchema(Configuration hbaseConf, String tableName) throws IOException {
         Admin admin = ConnectionFactory.createConnection(hbaseConf).getAdmin();
-        if (!admin.tableExists(TableName.valueOf(tableName))) {
-            HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf(tableName));
-
-            HColumnDescriptor infoCf = new HColumnDescriptor(COLUMN_FAMILY_NAME);
-            infoCf.setScope(1);
-            tableDescriptor.addFamily(infoCf);
-
-            admin.createTable(tableDescriptor);
+        if (admin.tableExists(TableName.valueOf(tableName))) {
+            admin.disableTable(TableName.valueOf(tableName));
+            admin.deleteTable(TableName.valueOf(tableName));
         }
+        HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf(tableName));
+        HColumnDescriptor infoCf = new HColumnDescriptor(COLUMN_FAMILY_NAME);
+        infoCf.setScope(1);
+        tableDescriptor.addFamily(infoCf);
+
+        admin.createTable(tableDescriptor);
+
         admin.close();
     }
 
