@@ -67,17 +67,6 @@ public class FraudDetectionJob {
         createSchema(configuration, DEFAULT_TABLE_NAME + "-in");
         createSchema(configuration, DEFAULT_TABLE_NAME + "-out");
 
-        /* Need external process that inserts elements in HBase */
-//        2021 - 02 - 16 T18:
-//        32:04.139
-//        2021 - 02 - 16 T18:
-//        32:02.727
-//
-//        2021 - 02 - 16 T18:
-//        35:14.146
-//        2021 - 02 - 16 T18:
-//        35:13.970
-
         HBaseSourceDeserializer<Tuple2<String, String>> sourceDeserializer = new HBaseStringDeserializationSchema();
 
         HBaseSource<Tuple2<String, String>> source =
@@ -90,13 +79,8 @@ public class FraudDetectionJob {
         DataStream<Tuple2<String, String>> stream =
                 env.fromSource(source, WatermarkStrategy.noWatermarks(), "HBaseSource", sourceDeserializer.getProducedType());
 
-        stream.map(new MapFunction<Tuple2<String, String>, Tuple2<String, String>>() {
-            @Override
-            public Tuple2<String, String> map(Tuple2<String, String> value) throws Exception {
-                return new Tuple2<>(value.f0, "BBB");
-            }
-        });
-//                .returns(Types.TUPLE(Types.STRING, Types.STRING));
+        stream = stream.map((MapFunction<Tuple2<String, String>, Tuple2<String, String>>) value ->
+                Tuple2.of(value.f0, "TEST! " + value.f1));
 
         HBaseSink<Tuple2<String, String>> sink =
                 new HBaseSink<>(
