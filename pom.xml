@@ -62,9 +62,9 @@ under the License.
 		<!-- This dependency is provided, because it should not be packaged into the JAR file. -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+			<artifactId>flink-streaming-java_2.12</artifactId>
 			<version>${flink.version}</version>
-			<scope>provided</scope>
+<!--			<scope>provided</scope>-->
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -75,7 +75,7 @@ under the License.
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-core</artifactId>
-			<version>1.12-SNAPSHOT</version>
+			<version>1.12.0</version>
 <!--			<scope>provided</scope>-->
 		</dependency>
 
@@ -105,7 +105,7 @@ under the License.
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-hbase-base_2.11</artifactId>
-			<version>1.12-SNAPSHOT</version>
+			<version>1.12.0</version>
 		</dependency>
 
 		<!-- Add logging framework, to produce console output when running in the IDE. -->
