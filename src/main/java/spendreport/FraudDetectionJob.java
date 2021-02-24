@@ -21,7 +21,7 @@ package spendreport;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.connector.source.Boundedness;
-import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.connector.hbase.sink.HBaseSink;
 import org.apache.flink.connector.hbase.sink.HBaseSinkSerializer;
 import org.apache.flink.connector.hbase.source.HBaseSource;
@@ -49,7 +49,7 @@ import java.io.Serializable;
  */
 public class FraudDetectionJob {
 
-    public static final String COLUMN_FAMILY_NAME = "info0";
+    public static final String COLUMN_FAMILY_NAME = "info";
     public static final String DEFAULT_TABLE_NAME = "latency";
 
     public static void main(String[] args) throws Exception {
@@ -67,22 +67,22 @@ public class FraudDetectionJob {
         createSchema(configuration, DEFAULT_TABLE_NAME + "-in");
         createSchema(configuration, DEFAULT_TABLE_NAME + "-out");
 
-        HBaseSourceDeserializer<Tuple2<String, String>> sourceDeserializer = new HBaseStringDeserializationSchema();
+        HBaseSourceDeserializer<Tuple3<String, String, String>> sourceDeserializer = new HBaseStringDeserializationSchema();
 
-        HBaseSource<Tuple2<String, String>> source =
+        HBaseSource<Tuple3<String, String, String>> source =
                 new HBaseSource<>(
                         Boundedness.CONTINUOUS_UNBOUNDED,
                         sourceDeserializer,
                         DEFAULT_TABLE_NAME + "-in",
                         configuration);
 
-        DataStream<Tuple2<String, String>> stream =
+        DataStream<Tuple3<String, String, String>> stream =
                 env.fromSource(source, WatermarkStrategy.noWatermarks(), "HBaseSource", sourceDeserializer.getProducedType());
 
-        stream = stream.map((MapFunction<Tuple2<String, String>, Tuple2<String, String>>) value ->
-                Tuple2.of(value.f0, "TEST! " + value.f1));
+        stream = stream.map((MapFunction<Tuple3<String, String, String>, Tuple3<String, String, String>>) value ->
+                Tuple3.of(value.f0, value.f1, "TEST! " + value.f2));
 
-        HBaseSink<Tuple2<String, String>> sink =
+        HBaseSink<Tuple3<String, String, String>> sink =
                 new HBaseSink<>(
                         DEFAULT_TABLE_NAME + "-out",
                         new HBaseStringSerializationSchema(),
@@ -100,10 +100,11 @@ public class FraudDetectionJob {
             admin.deleteTable(TableName.valueOf(tableName));
         }
         HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf(tableName));
-        HColumnDescriptor infoCf = new HColumnDescriptor(COLUMN_FAMILY_NAME);
-        infoCf.setScope(1);
-        tableDescriptor.addFamily(infoCf);
-
+        for (int i = 0; i < 2; i++) {
+            HColumnDescriptor infoCf = new HColumnDescriptor(COLUMN_FAMILY_NAME + i);
+            infoCf.setScope(1);
+            tableDescriptor.addFamily(infoCf);
+        }
         admin.createTable(tableDescriptor);
 
         admin.close();
@@ -125,10 +126,10 @@ public class FraudDetectionJob {
     }
 
     public static class HBaseStringDeserializationSchema
-            extends HBaseSourceDeserializer<Tuple2<String, String>> {
+            extends HBaseSourceDeserializer<Tuple3<String, String, String>> {
 
-        public Tuple2<String, String> deserialize(HBaseEvent event) {
-            return new Tuple2<>(event.getRowId(), new String(event.getPayload()));
+        public Tuple3<String, String, String> deserialize(HBaseEvent event) {
+            return Tuple3.of(event.getRowId(), event.getCf(), new String(event.getPayload()));
         }
     }
 
@@ -136,25 +137,25 @@ public class FraudDetectionJob {
      * HBaseStringSerializationSchema.
      */
     public static class HBaseStringSerializationSchema
-            implements HBaseSinkSerializer<Tuple2<String, String>>, Serializable {
+            implements HBaseSinkSerializer<Tuple3<String, String, String>>, Serializable {
 
         @Override
-        public byte[] serializePayload(Tuple2<String, String> event) {
+        public byte[] serializePayload(Tuple3<String, String, String> event) {
+            return Bytes.toBytes(event.f2);
+        }
+
+        @Override
+        public byte[] serializeColumnFamily(Tuple3<String, String, String> event) {
             return Bytes.toBytes(event.f1);
         }
 
         @Override
-        public byte[] serializeColumnFamily(Tuple2<String, String> event) {
-            return Bytes.toBytes(COLUMN_FAMILY_NAME);
-        }
-
-        @Override
-        public byte[] serializeQualifier(Tuple2<String, String> event) {
+        public byte[] serializeQualifier(Tuple3<String, String, String> event) {
             return Bytes.toBytes("0");
         }
 
         @Override
-        public byte[] serializeRowKey(Tuple2<String, String> event) {
+        public byte[] serializeRowKey(Tuple3<String, String, String> event) {
             return Bytes.toBytes(event.f0);
         }
     }
