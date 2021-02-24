@@ -20,6 +20,8 @@ package spendreport;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.connector.source.Boundedness;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.connector.hbase.sink.HBaseSink;
@@ -80,7 +82,12 @@ public class FraudDetectionJob {
                 env.fromSource(source, WatermarkStrategy.noWatermarks(), "HBaseSource", sourceDeserializer.getProducedType());
 
         stream = stream.map((MapFunction<Tuple3<String, String, String>, Tuple3<String, String, String>>) value ->
-                Tuple3.of(value.f0, value.f1, "TEST! " + value.f2));
+                Tuple3.of(value.f0, value.f1, "TEST! " + value.f2)).returns(new TypeHint<Tuple3<String, String, String>>() {
+            @Override
+            public TypeInformation<Tuple3<String, String, String>> getTypeInfo() {
+                return super.getTypeInfo();
+            };
+        });
 
         HBaseSink<Tuple3<String, String, String>> sink =
                 new HBaseSink<>(
