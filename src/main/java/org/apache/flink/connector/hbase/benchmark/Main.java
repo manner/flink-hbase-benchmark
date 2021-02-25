@@ -1,9 +1,20 @@
 package org.apache.flink.connector.hbase.benchmark;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.replication.ReplicationPeerDescription;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -49,7 +60,7 @@ public class Main {
             clearTables();
             createTable();
             setupFlinkEnvironment();
-            createData("tableName", config.numberOfColumns, 100000, 1);
+            createData(tableName, config.numberOfColumns, 100000, 1);
             waitForTermination();
             retrieveResults();
         }
@@ -85,6 +96,12 @@ public class Main {
         }
 
         private void setupFlinkEnvironment() {
+            StreamExecutionEnvironment env = new StreamExecutionEnvironment();
+            NumberSequenceSource sequenceSource = new NumberSequenceSource(0, 10);
+            DataStream<Long> stream = env.fromSource(sequenceSource, WatermarkStrategy.noWatermarks(), "sequence");
+            KeyedStream<Long, Boolean> keyedStream = stream.keyBy(n -> n % 2 == 0);
+            stream = keyedStream.reduce((ReduceFunction<Long>) (value1, value2) -> value1 + value2);
+            stream.print();
         }
 
         private void createData(String tableName, int noOfFamilies, int noOfRows, int noOfWriters) {
