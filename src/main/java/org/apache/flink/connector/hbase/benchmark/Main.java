@@ -2,9 +2,8 @@ package org.apache.flink.connector.hbase.benchmark;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.replication.ReplicationPeerDescription;
 
 import java.io.IOException;
@@ -14,6 +13,7 @@ import java.util.List;
 public class Main {
 
     public static final Configuration HBASE_CONFIG = getDefaultConfig();
+    public static final String CF_Name = "cf";
 
     public static void main(String[] args) {
         for (RunConfig runConfig : allRunConfigurations()) {
@@ -37,7 +37,7 @@ public class Main {
 
     public static class Run {
         public final RunConfig config;
-        private String[] tableNames;
+        private String tableName;
 
         public Run(RunConfig config) {
             this.config = config;
@@ -46,6 +46,7 @@ public class Main {
         public void run() {
             clearReplicationPeers();
             clearTables();
+            createTables();
             setupFlinkEnvironment();
             createData();
             waitForTermination();
@@ -76,7 +77,7 @@ public class Main {
         }
 
         private void createTables() {
-            tableNames = config.target.createTables(config);
+            //tableNames = config.target.createTables(config);
         }
 
         private void setupFlinkEnvironment() {
@@ -101,19 +102,10 @@ public class Main {
     }
 
     public static abstract class BenchmarkTarget {
-        public abstract String[] createTables(RunConfig config);
 
         public static class Source extends BenchmarkTarget {
-            @Override
-            public String[] createTables(RunConfig config) {
-                return null;
-            }
         }
         public static class Sink extends BenchmarkTarget {
-            @Override
-            public String[] createTables(RunConfig config) {
-                return null;
-            }
         }
     }
 
@@ -142,5 +134,24 @@ public class Main {
         configuration.setBoolean("hbase.replication", true);
 
         return configuration;
+    }
+
+    private static TableDescriptorBuilder basicTableDescriptor(String tableNameString, int numColumnFamilies) {
+        TableName tableName = TableName.valueOf(tableNameString);
+        TableDescriptorBuilder tableBuilder = TableDescriptorBuilder.newBuilder(tableName);
+        for (int i = 0; i < numColumnFamilies; i++) {
+            ColumnFamilyDescriptorBuilder cfBuilder = ColumnFamilyDescriptorBuilder.newBuilder((CF_Name + i).getBytes());
+            cfBuilder.setScope(1);
+            tableBuilder.setColumnFamily(cfBuilder.build());
+        }
+        return tableBuilder;
+    }
+
+    private static void createTable(TableDescriptorBuilder tableBuilder) {
+        try(Admin admin = ConnectionFactory.createConnection(HBASE_CONFIG).getAdmin()) {
+            admin.createTable(tableBuilder.build());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
