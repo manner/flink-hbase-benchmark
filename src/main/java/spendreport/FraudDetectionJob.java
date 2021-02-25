@@ -29,6 +29,7 @@ import org.apache.flink.connector.hbase.sink.HBaseSinkSerializer;
 import org.apache.flink.connector.hbase.source.HBaseSource;
 import org.apache.flink.connector.hbase.source.reader.HBaseEvent;
 import org.apache.flink.connector.hbase.source.reader.HBaseSourceDeserializer;
+import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -98,6 +99,9 @@ public class FraudDetectionJob {
         stream.sinkTo(sink);
 
         env.execute("HBaseBenchmark");
+        JobClient client = env.executeAsync();
+        client.getJobExecutionResult();
+
     }
 
     public static void createSchema(Configuration hbaseConf, String tableName) throws IOException {

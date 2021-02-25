@@ -5,6 +5,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.replication.ReplicationPeerDescription;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class Main {
         public void run() {
             clearReplicationPeers();
             clearTables();
-            createTables();
+            createTable();
             setupFlinkEnvironment();
             createData("tableName", config.numberOfColumns, 100000, 1);
             waitForTermination();
@@ -76,8 +77,11 @@ public class Main {
             }
         }
 
-        private void createTables() {
-            //tableNames = config.target.createTables(config);
+        private void createTable() {
+            tableName = config.target.createTableName();
+            TableDescriptorBuilder basicTableDescriptor = basicTableDescriptor(tableName, config.numberOfColumns);
+            config.goal.augmentTableDescriptor(basicTableDescriptor, config.target);
+            Main.createTable(basicTableDescriptor);
         }
 
         private void setupFlinkEnvironment() {
@@ -132,7 +136,7 @@ public class Main {
         TableName tableName = TableName.valueOf(tableNameString);
         TableDescriptorBuilder tableBuilder = TableDescriptorBuilder.newBuilder(tableName);
         for (int i = 0; i < numColumnFamilies; i++) {
-            ColumnFamilyDescriptorBuilder cfBuilder = ColumnFamilyDescriptorBuilder.newBuilder((CF_Name + i).getBytes());
+            ColumnFamilyDescriptorBuilder cfBuilder = ColumnFamilyDescriptorBuilder.newBuilder(Bytes.toBytes(CF_Name + i));
             cfBuilder.setScope(1);
             tableBuilder.setColumnFamily(cfBuilder.build());
         }
