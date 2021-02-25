@@ -48,7 +48,7 @@ public class Main {
             clearTables();
             createTables();
             setupFlinkEnvironment();
-            createData();
+            createData("tableName", config.numberOfColumns, 100000, 1);
             waitForTermination();
             retrieveResults();
         }
@@ -83,8 +83,14 @@ public class Main {
         private void setupFlinkEnvironment() {
         }
 
-        private void createData() {
-
+        private void createData(String tableName, int noOfFamilies, int noOfRows, int noOfWriters) {
+            try {
+                Runtime.getRuntime()
+                        .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --nomapred sequentialWrite %d",
+                                tableName, noOfFamilies, noOfRows, noOfWriters));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         private void waitForTermination() {
@@ -96,7 +102,8 @@ public class Main {
     }
 
     public static abstract class BenchmarkGoal {
-        public static class Througput extends BenchmarkGoal {}
+        public static class Throughput extends BenchmarkGoal {
+        }
 
         public static class Latency extends BenchmarkGoal {}
     }
@@ -112,7 +119,7 @@ public class Main {
     public static List<RunConfig> allRunConfigurations() {
         List<RunConfig> configs = new ArrayList<>();
 
-        for (BenchmarkGoal goal : List.of(new BenchmarkGoal.Througput(), new BenchmarkGoal.Latency())) {
+        for (BenchmarkGoal goal : List.of(new BenchmarkGoal.Throughput(), new BenchmarkGoal.Latency())) {
             for(BenchmarkTarget target : List.of(new BenchmarkTarget.Source(), new BenchmarkTarget.Sink())) {
                 for (int cols : List.of(1, 2, 10)) {
                     for (int parallelism : List.of(1, 2, 8)) {
