@@ -81,6 +81,7 @@ public class Main {
             System.out.println("Clearing tables ...");
             try (Admin admin = ConnectionFactory.createConnection(HBASE_CONFIG).getAdmin()) {
                 for (TableDescriptor desc : admin.listTableDescriptors()) {
+                    admin.disableTable(desc.getTableName());
                     admin.deleteTable(desc.getTableName());
                 }
             } catch (IOException e) {
@@ -106,7 +107,7 @@ public class Main {
         }
 
         private void createData() {
-            config.goal.makeData(tableName, config.numberOfColumns);
+            config.goal.makeData(tableName, config.numberOfColumns, config.target);
         }
 
         private void waitForTermination() {
@@ -158,6 +159,17 @@ public class Main {
     private static void createTable(TableDescriptorBuilder tableBuilder) {
         try(Admin admin = ConnectionFactory.createConnection(HBASE_CONFIG).getAdmin()) {
             admin.createTable(tableBuilder.build());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void runHBasePerformanceEvaluator(String tableName, int noOfFamilies, int noOfRows, int noOfWriters) {
+        try {
+            Runtime.getRuntime()
+                    .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --nomapred sequentialWrite %d",
+                            tableName, noOfFamilies, noOfRows, noOfWriters));
         } catch (IOException e) {
             e.printStackTrace();
         }

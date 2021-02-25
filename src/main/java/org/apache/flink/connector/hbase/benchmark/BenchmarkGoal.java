@@ -7,7 +7,7 @@ import java.io.IOException;
 public abstract class BenchmarkGoal {
 
     public abstract void augmentTableDescriptor(TableDescriptorBuilder basicTableDescriptor, BenchmarkTarget target);
-    public abstract void makeData(String tableName, int numberOfColumns);
+    public abstract void makeData(String tableName, int numberOfColumns, BenchmarkTarget target);
 
     public static class Throughput extends BenchmarkGoal {
         @Override
@@ -16,25 +16,15 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public void makeData(String tableName, int numberOfColumns) {
-            runHBasePerformanceEvaluator(tableName, numberOfColumns, 100000, 1);
-        }
-
-        public void runHBasePerformanceEvaluator(String tableName, int noOfFamilies, int noOfRows, int noOfWriters) {
-            try {
-                Runtime.getRuntime()
-                        .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --nomapred sequentialWrite %d",
-                                tableName, noOfFamilies, noOfRows, noOfWriters));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        public void makeData(String tableName, int numberOfColumns, BenchmarkTarget target) {
+            target.makeDataForThroughput(tableName, numberOfColumns);
         }
     }
 
     public static class Latency extends BenchmarkGoal {
 
         @Override
-        public void makeData(String tableName, int numberOfColumns) {
+        public void makeData(String tableName, int numberOfColumns, BenchmarkTarget target) {
             //TODO
         }
 
