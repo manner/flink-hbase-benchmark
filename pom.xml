@@ -89,14 +89,6 @@ under the License.
 		<!-- Add connector dependencies here. They must be in the default scope (compile). -->
 
 		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-table_2.12</artifactId>
-			<version>1.8.0</version>
-			<scope>system</scope>
-			<systemPath>/Users/moritzmanner/Projects/flink/build-target/lib/flink-table_2.11-1.12-SNAPSHOT.jar</systemPath>
-		</dependency>
-
-		<dependency>
 		    <groupId>org.apache.flink</groupId>
 		    <artifactId>flink-connector-hbase-new</artifactId>
 		    <version>1.12-SNAPSHOT</version>
