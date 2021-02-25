@@ -13,7 +13,7 @@ import java.util.List;
 public class Main {
 
     public static final Configuration HBASE_CONFIG = getDefaultConfig();
-    public static final String CF_Name = "cf";
+    public static final String CF_Name = "info";
 
     public static void main(String[] args) {
         for (RunConfig runConfig : allRunConfigurations()) {
@@ -98,21 +98,6 @@ public class Main {
 
         private void retrieveResults() {
 
-        }
-    }
-
-    public static abstract class BenchmarkGoal {
-        public static class Throughput extends BenchmarkGoal {
-        }
-
-        public static class Latency extends BenchmarkGoal {}
-    }
-
-    public static abstract class BenchmarkTarget {
-
-        public static class Source extends BenchmarkTarget {
-        }
-        public static class Sink extends BenchmarkTarget {
         }
     }
 
