@@ -24,7 +24,7 @@ import java.util.List;
 
 public class Main {
 
-    public static final Configuration HBASE_CONFIG = getDefaultConfig();
+    public static final Configuration HBASE_CONFIG = getDefaultHBaseConfig();
     public static final String CF_Name = "info";
 
     public static void main(String[] args) {
@@ -60,13 +60,13 @@ public class Main {
             clearTables();
             createTable();
             setupFlinkEnvironment();
-            createData(tableName, config.numberOfColumns, 100000, 1);
+            createData();
             waitForTermination();
             retrieveResults();
         }
 
 
-        private void clearReplicationPeers() {
+        private static void clearReplicationPeers() {
             System.out.println("Clearing replication peers ...");
             try (Admin admin = ConnectionFactory.createConnection(HBASE_CONFIG).getAdmin()) {
                 for (ReplicationPeerDescription desc : admin.listReplicationPeers()) {
@@ -77,7 +77,7 @@ public class Main {
             }
         }
 
-        private void clearTables() {
+        private static void clearTables() {
             System.out.println("Clearing tables ...");
             try (Admin admin = ConnectionFactory.createConnection(HBASE_CONFIG).getAdmin()) {
                 for (TableDescriptor desc : admin.listTableDescriptors()) {
@@ -92,6 +92,7 @@ public class Main {
             tableName = config.target.createTableName();
             TableDescriptorBuilder basicTableDescriptor = basicTableDescriptor(tableName, config.numberOfColumns);
             config.goal.augmentTableDescriptor(basicTableDescriptor, config.target);
+            System.out.println("Creating table "+tableName+" ...");
             Main.createTable(basicTableDescriptor);
         }
 
@@ -104,14 +105,8 @@ public class Main {
             stream.print();
         }
 
-        private void createData(String tableName, int noOfFamilies, int noOfRows, int noOfWriters) {
-            try {
-                Runtime.getRuntime()
-                        .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --nomapred sequentialWrite %d",
-                                tableName, noOfFamilies, noOfRows, noOfWriters));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        private void createData() {
+            config.goal.makeData(tableName, config.numberOfColumns);
         }
 
         private void waitForTermination() {
@@ -138,7 +133,7 @@ public class Main {
     }
 
 
-    private static Configuration getDefaultConfig() {
+    private static Configuration getDefaultHBaseConfig() {
         Configuration configuration = HBaseConfiguration.create();
 
         configuration.setInt("replication.stats.thread.period.seconds", 5);
