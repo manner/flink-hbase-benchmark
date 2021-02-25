@@ -1,5 +1,9 @@
 package org.apache.flink.connector.hbase.benchmark;
 
+import org.apache.flink.api.connector.sink.Sink;
+import org.apache.flink.api.connector.source.Source;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
@@ -15,6 +19,14 @@ public abstract class BenchmarkTarget {
     public abstract void augmentTableDescriptorForLatency(TableDescriptorBuilder basicTableDescriptor);
     public abstract void makeDataForLatency(String tableName, int numberOfColumns);
     public abstract void makeDataForThroughput(String tableName, int numberOfColumns);
+
+    public abstract org.apache.flink.api.connector.source.Source<?,?,?> makeSourceForThroughput(StreamExecutionEnvironment env);
+    public abstract DataStream<?> makeMapperForThroughput(DataStream<?> in);
+    public abstract org.apache.flink.api.connector.sink.Sink<?,?,?,?> makeSinkForThroughput(DataStream<?> in);
+
+    public abstract org.apache.flink.api.connector.source.Source<?,?,?> makeSourceForLatency(StreamExecutionEnvironment env);
+    public abstract DataStream<?> makeMapperForLatency(DataStream<?> in);
+    public abstract org.apache.flink.api.connector.sink.Sink<?,?,?,?> makeSinkForLatency(DataStream<?> in);
 
     public static class Source extends BenchmarkTarget {
         @Override
@@ -32,13 +44,49 @@ public abstract class BenchmarkTarget {
             Main.runHBasePerformanceEvaluator(tableName, numberOfColumns, 100000, 1);
         }
 
+        @Override
+        public org.apache.flink.api.connector.source.Source<?, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public DataStream<?> makeMapperForThroughput(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public org.apache.flink.api.connector.sink.Sink<?, ?, ?, ?> makeSinkForThroughput(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public org.apache.flink.api.connector.source.Source<?, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public DataStream<?> makeMapperForLatency(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public org.apache.flink.api.connector.sink.Sink<?, ?, ?, ?> makeSinkForLatency(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
 
     }
     public static class Sink extends BenchmarkTarget {
         public static final String CREATION_TIMESTAMP_CF = "creation_timestamp";
         @Override
         public void augmentTableDescriptorForLatency(TableDescriptorBuilder basicTableDescriptor) {
-            basicTableDescriptor.setColumnFamily(ColumnFamilyDescriptorBuilder.of("CREATION_TIMESTAMP_CF"));
+            basicTableDescriptor.setColumnFamily(ColumnFamilyDescriptorBuilder.of(CREATION_TIMESTAMP_CF));
         }
 
         @Override
@@ -49,6 +97,42 @@ public abstract class BenchmarkTarget {
         @Override
         public void makeDataForThroughput(String tableName, int numberOfColumns) {
             //TODO
+        }
+
+        @Override
+        public org.apache.flink.api.connector.source.Source<?, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public DataStream<?> makeMapperForThroughput(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public org.apache.flink.api.connector.sink.Sink<?, ?, ?, ?> makeSinkForThroughput(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public org.apache.flink.api.connector.source.Source<?, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public DataStream<?> makeMapperForLatency(DataStream<?> in) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public org.apache.flink.api.connector.sink.Sink<?, ?, ?, ?> makeSinkForLatency(DataStream<?> in) {
+            //TODO
+            return null;
         }
     }
 

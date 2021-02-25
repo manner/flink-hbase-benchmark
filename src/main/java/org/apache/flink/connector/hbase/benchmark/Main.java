@@ -2,7 +2,10 @@ package org.apache.flink.connector.hbase.benchmark;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.api.connector.sink.Sink;
+import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
+import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -21,6 +24,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Main {
 
@@ -50,6 +54,7 @@ public class Main {
     public static class Run {
         public final RunConfig config;
         private String tableName;
+        private final String id = UUID.randomUUID().toString(); //TODO
 
         public Run(RunConfig config) {
             this.config = config;
@@ -59,9 +64,10 @@ public class Main {
             clearReplicationPeers();
             clearTables();
             createTable();
-            setupFlinkEnvironment();
+            JobClient jobClient = setupFlinkEnvironment();
+            //TODO wait for flink cluster to be up
             createData();
-            waitForTermination();
+            waitForTermination(jobClient);
             retrieveResults();
         }
 
@@ -97,24 +103,57 @@ public class Main {
             Main.createTable(basicTableDescriptor);
         }
 
-        private void setupFlinkEnvironment() {
+        private JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = new StreamExecutionEnvironment();
-            NumberSequenceSource sequenceSource = new NumberSequenceSource(0, 10);
-            DataStream<Long> stream = env.fromSource(sequenceSource, WatermarkStrategy.noWatermarks(), "sequence");
-            KeyedStream<Long, Boolean> keyedStream = stream.keyBy(n -> n % 2 == 0);
-            stream = keyedStream.reduce((ReduceFunction<Long>) (value1, value2) -> value1 + value2);
-            stream.print();
+            Source<?, ?, ?> source = config.goal.makeSource(env, config.target);
+            DataStream<?> streamFromSource = env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            DataStream<?> streamToSink = config.goal.makeMapper(streamFromSource, config.target);
+            Sink<?, ?, ?, ?> sink = config.goal.makeSink(streamToSink, config.target);
+            try {
+                return env.executeAsync(id);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Starting flink in benchmark \""+id+"\" failed", e);
+            }
+
+//            StreamExecutionEnvironment env = new StreamExecutionEnvironment();
+//            NumberSequenceSource sequenceSource = new NumberSequenceSource(0, 10);
+//            DataStream<Long> stream = env.fromSource(sequenceSource, WatermarkStrategy.noWatermarks(), "sequence");
+//            KeyedStream<Long, Boolean> keyedStream = stream.keyBy(n -> n % 2 == 0);
+//            stream = keyedStream.reduce((ReduceFunction<Long>) (value1, value2) -> value1 + value2);
+//            stream.print();
         }
 
         private void createData() {
             config.goal.makeData(tableName, config.numberOfColumns, config.target);
         }
 
-        private void waitForTermination() {
+        private void waitForTermination(JobClient jobClient) {
+            try {
+                jobClient.getJobExecutionResult().get();
+            } catch (Exception e) {
+                if(SuccessException.causedBySuccess(e)) {
+                    System.out.println("Successful execution");
+                } else {
+                    throw new RuntimeException("Running benchmark \""+id+"\" failed", e);
+                }
+            }
         }
 
+        @Deprecated
         private void retrieveResults() {
+            //TODO let write by flink component
+            // config.goal.retrieveResults(tableName, config.target);
+        }
+    }
 
+    public static class SuccessException extends RuntimeException {
+        public static boolean causedBySuccess(Exception exception) {
+            boolean success = false;
+            for (Throwable e = exception; !success && e != null; e = e.getCause()) {
+                success = success || e instanceof SuccessException;
+            }
+            return success;
         }
     }
 
