@@ -114,7 +114,7 @@ public class Main {
 
         private <T> JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-            DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, id);
+            DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, tableName);
             DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target, resultFolder);
             config.goal.sinkStream(streamToSink, config.target);
             try {
