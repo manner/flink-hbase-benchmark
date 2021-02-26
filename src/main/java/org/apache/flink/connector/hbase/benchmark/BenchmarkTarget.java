@@ -54,8 +54,7 @@ public abstract class BenchmarkTarget<StreamType> {
     public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in, File resultFolder);
 
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in, File resultFolder) {
-        //return in.map(new ThroughputMapper<>(resultFolder, in.getType())).returns(in.getType());
-        return in;
+        return in.map(new ThroughputMapper<>(resultFolder, in.getType())).returns(in.getType());
     }
 
     protected static class ThroughputMapper<T> implements MapFunction<T, T> , ResultTypeQueryable<T> {
@@ -153,7 +152,7 @@ public abstract class BenchmarkTarget<StreamType> {
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class);
         }
 
         @Override
