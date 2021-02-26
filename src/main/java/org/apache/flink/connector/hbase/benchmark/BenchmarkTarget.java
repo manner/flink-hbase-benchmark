@@ -35,8 +35,35 @@ public abstract class BenchmarkTarget<StreamType> {
     public abstract org.apache.flink.api.connector.source.Source<StreamType, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env);
 
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in) {
-        //TODO, common for both targets
-        return null;
+        return in.map(new ThroughputMapper<>());
+    }
+
+    protected static class ThroughputMapper<T> implements MapFunction<T, T> {
+
+        public static final int RESOLUTION = 1000; //TODO think bigger
+
+        private int count = 0;
+        private long lastTimeStamp = -1;
+
+        @Override
+        public T map(T t) throws Exception {
+            count ++;
+            if (count % RESOLUTION == 0) {
+                long current = System.currentTimeMillis();
+                if (lastTimeStamp < 0) {
+                    //First time
+                } else {
+                    long diff = current - lastTimeStamp;
+                    writeRow(RESOLUTION, diff);
+                }
+                lastTimeStamp = current;
+            }
+            return t;
+        }
+
+        private void writeRow(Object... cells) {
+            //TODO
+        }
     }
 
     public abstract org.apache.flink.api.connector.sink.Sink<StreamType, ?, ?, ?> makeSinkForThroughput();
