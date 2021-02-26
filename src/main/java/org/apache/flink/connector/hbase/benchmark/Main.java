@@ -103,12 +103,13 @@ public class Main {
             Main.createTable(basicTableDescriptor);
         }
 
-        private JobClient setupFlinkEnvironment() {
+        private <T> JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = new StreamExecutionEnvironment();
-            Source<?, ?, ?> source = config.goal.makeSource(env, config.target);
-            DataStream<?> streamFromSource = env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
-            DataStream<?> streamToSink = config.goal.makeMapper(streamFromSource, config.target);
-            Sink<?, ?, ?, ?> sink = config.goal.makeSink(streamToSink, config.target);
+            Source<T, ?, ?> source = config.goal.makeSource(env, config.target);
+            DataStream<T> streamFromSource = env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target);
+            Sink<T, ?, ?, ?> sink = config.goal.makeSink(config.target);
+            streamToSink.sinkTo(sink);
             try {
                 return env.executeAsync(id);
             } catch (Exception e) {

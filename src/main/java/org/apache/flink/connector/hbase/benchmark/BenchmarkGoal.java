@@ -13,9 +13,9 @@ public abstract class BenchmarkGoal {
     public abstract void augmentTableDescriptor(TableDescriptorBuilder basicTableDescriptor, BenchmarkTarget target);
     public abstract void makeData(String tableName, int numberOfColumns, BenchmarkTarget target);
 
-    public abstract Source<?, ? ,?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget target);
-    public abstract DataStream<?> makeMapper(DataStream<?> in, BenchmarkTarget target);
-    public abstract Sink<?, ?, ?, ?> makeSink(DataStream<?> in, BenchmarkTarget target);
+    public abstract <T> Source<T, ? ,?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target);
+    public abstract <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target);
+    public abstract <T> Sink<T, ?, ?, ?> makeSink(BenchmarkTarget<T> target);
 
     public static class Throughput extends BenchmarkGoal {
         @Override
@@ -29,18 +29,18 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public Source<?, ?, ?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget target) {
+        public <T> Source<T, ?, ?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target) {
             return target.makeSourceForThroughput(env);
         }
 
         @Override
-        public DataStream<?> makeMapper(DataStream<?> in, BenchmarkTarget target) {
+        public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target) {
             return target.makeMapperForThroughput(in);
         }
 
         @Override
-        public Sink<?, ?, ?, ?> makeSink(DataStream<?> in, BenchmarkTarget target) {
-            return target.makeSinkForThroughput(in);
+        public <T> Sink<T, ?, ?, ?> makeSink(BenchmarkTarget<T> target) {
+            return target.makeSinkForThroughput();
         }
     }
 
@@ -57,18 +57,18 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public Source<?, ?, ?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget target) {
+        public <T> Source<T, ?, ?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target) {
             return target.makeSourceForLatency(env);
         }
 
         @Override
-        public DataStream<?> makeMapper(DataStream<?> in, BenchmarkTarget target) {
+        public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target) {
             return target.makeMapperForLatency(in);
         }
 
         @Override
-        public Sink<?, ?, ?, ?> makeSink(DataStream<?> in, BenchmarkTarget target) {
-            return target.makeSinkForLatency(in);
+        public <T> Sink<T, ?, ?, ?> makeSink(BenchmarkTarget<T> target) {
+            return target.makeSinkForLatency();
         }
     }
 
