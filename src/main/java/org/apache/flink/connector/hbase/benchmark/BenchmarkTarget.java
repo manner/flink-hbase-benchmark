@@ -58,6 +58,8 @@ public abstract class BenchmarkTarget<StreamType> {
         return in.map(new ThroughputMapper<>(resultFolder));
     }
 
+    public abstract Class<StreamType> streamTypeClass();
+
     protected static class ThroughputMapper<T> implements MapFunction<T, T> {
 
         public static final int RESOLUTION = 1000; //TODO think bigger
@@ -130,13 +132,7 @@ public abstract class BenchmarkTarget<StreamType> {
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id)
-                    .returns(new TypeHint<HBaseEvent>() {
-                        @Override
-                        public TypeInformation<HBaseEvent> getTypeInfo() {
-                            return super.getTypeInfo();
-                        }
-                    });
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class);
         }
 
         @Override
@@ -152,7 +148,7 @@ public abstract class BenchmarkTarget<StreamType> {
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class).returns(HBaseEvent.class);
         }
 
         @Override
@@ -167,7 +163,10 @@ public abstract class BenchmarkTarget<StreamType> {
             stream.addSink(sink);
         }
 
-
+        @Override
+        public Class<HBaseEvent> streamTypeClass() {
+            return HBaseEvent.class;
+        }
     }
 
     public static class Sink extends BenchmarkTarget<Long> {
@@ -215,6 +214,11 @@ public abstract class BenchmarkTarget<StreamType> {
         public void sinkForLatency(DataStream<Long> stream) {
             HBaseSink<Long> sink = new HBaseSink<>("tableName", new LongSerializer(), Main.HBASE_CONFIG);
             stream.sinkTo(sink);
+        }
+
+        @Override
+        public Class<Long> streamTypeClass() {
+            return Long.class;
         }
     }
 
