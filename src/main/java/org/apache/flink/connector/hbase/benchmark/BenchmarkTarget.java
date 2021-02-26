@@ -2,8 +2,10 @@ package org.apache.flink.connector.hbase.benchmark;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.connector.source.Boundedness;
 import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
+import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.connector.hbase.sink.HBaseSink;
 import org.apache.flink.connector.hbase.sink.HBaseSinkSerializer;
 import org.apache.flink.connector.hbase.source.HBaseSource;
@@ -52,19 +54,21 @@ public abstract class BenchmarkTarget<StreamType> {
     public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in, File resultFolder);
 
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in, File resultFolder) {
-        return in.map(new ThroughputMapper<>(resultFolder));
+        return in.map(new ThroughputMapper<>(resultFolder, in.getType()));
     }
 
-    protected static class ThroughputMapper<T> implements MapFunction<T, T> {
+    protected static class ThroughputMapper<T> implements MapFunction<T, T> , ResultTypeQueryable<T> {
 
         public static final int RESOLUTION = 1000; //TODO think bigger
 
         private int count = 0;
         private long lastTimeStamp = -1;
         private final String resultPath;
+        private final TypeInformation<T> typeInfo;
 
-        public ThroughputMapper(File resultFolder) {
+        public ThroughputMapper(File resultFolder, TypeInformation<T> typeInfo) {
             this.resultPath = resultFolder.toPath().resolve(UUID.randomUUID().toString()+".csv").toAbsolutePath().toString();
+            this.typeInfo = typeInfo;
             try {
                 resultPath().toFile().createNewFile();
             } catch (IOException e) {
@@ -101,6 +105,11 @@ public abstract class BenchmarkTarget<StreamType> {
 
         private Path resultPath() {
             return Paths.get(resultPath);
+        }
+
+        @Override
+        public TypeInformation<T> getProducedType() {
+            return typeInfo;
         }
     }
 
