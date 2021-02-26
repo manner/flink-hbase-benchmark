@@ -33,11 +33,11 @@ public abstract class BenchmarkTarget<StreamType> {
         //TODO, common for both targets
         return null;
     }
-    public abstract org.apache.flink.api.connector.sink.Sink<StreamType,?,?,?> makeSinkForThroughput(DataStream<?> in);
+    public abstract org.apache.flink.api.connector.sink.Sink<StreamType,?,?,?> makeSinkForThroughput(DataStream<StreamType> in);
 
     public abstract org.apache.flink.api.connector.source.Source<StreamType,?,?> makeSourceForLatency(StreamExecutionEnvironment env);
-    public abstract DataStream<?> makeMapperForLatency(DataStream<StreamType> in);
-    public abstract org.apache.flink.api.connector.sink.Sink<StreamType,?,?,?> makeSinkForLatency(DataStream<?> in);
+    public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in);
+    public abstract org.apache.flink.api.connector.sink.Sink<StreamType,?,?,?> makeSinkForLatency(DataStream<StreamType> in);
 
     public static class Source extends BenchmarkTarget<HBaseEvent> {
         @Override
@@ -62,7 +62,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<HBaseEvent, ?, ?, ?> makeSinkForThroughput(DataStream<?> in) {
+        public org.apache.flink.api.connector.sink.Sink<HBaseEvent, ?, ?, ?> makeSinkForThroughput(DataStream<HBaseEvent> in) {
             //TODO
             return null;
         }
@@ -74,13 +74,13 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public DataStream<?> makeMapperForLatency(DataStream<HBaseEvent> in) {
+        public DataStream<HBaseEvent> makeMapperForLatency(DataStream<HBaseEvent> in) {
             //TODO
             return null;
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<HBaseEvent, ?, ?, ?> makeSinkForLatency(DataStream<?> in) {
+        public org.apache.flink.api.connector.sink.Sink<HBaseEvent, ?, ?, ?> makeSinkForLatency(DataStream<HBaseEvent> in) {
             //TODO
             return null;
         }
@@ -110,7 +110,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<Long, ?, ?, ?> makeSinkForThroughput(DataStream<?> in) {
+        public org.apache.flink.api.connector.sink.Sink<Long, ?, ?, ?> makeSinkForThroughput(DataStream<Long> in) {
             //TODO
             return null;
         }
@@ -121,12 +121,12 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public DataStream<?> makeMapperForLatency(DataStream<Long> in) {
+        public DataStream<Long> makeMapperForLatency(DataStream<Long> in) {
             return in.map((MapFunction<Long, Long>) value -> System.currentTimeMillis());
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<Long, ?, ?, ?> makeSinkForLatency(DataStream<?> in) {
+        public org.apache.flink.api.connector.sink.Sink<Long, ?, ?, ?> makeSinkForLatency(DataStream<Long> in) {
             //TODO
             return null;
         }
