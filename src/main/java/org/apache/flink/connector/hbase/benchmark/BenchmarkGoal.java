@@ -5,6 +5,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
+import java.io.File;
+
 public abstract class BenchmarkGoal {
 
     public abstract void augmentTableDescriptor(TableDescriptorBuilder basicTableDescriptor, BenchmarkTarget target);
@@ -13,7 +15,7 @@ public abstract class BenchmarkGoal {
 
     public abstract <T> DataStream<T> makeStreamFromSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target, String id);
 
-    public abstract <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target);
+    public abstract <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target, File resultFolder);
 
     public abstract <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target);
 
@@ -34,8 +36,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target) {
-            return target.makeMapperForThroughput(in);
+        public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target, File resultFolder) {
+            return target.makeMapperForThroughput(in, resultFolder);
         }
 
         @Override
@@ -62,8 +64,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target) {
-            return target.makeMapperForLatency(in);
+        public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target, File resultFolder) {
+            return target.makeMapperForLatency(in, resultFolder);
         }
 
         @Override

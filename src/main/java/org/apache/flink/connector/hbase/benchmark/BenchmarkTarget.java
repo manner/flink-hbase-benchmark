@@ -18,6 +18,11 @@ import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
 public abstract class BenchmarkTarget<StreamType> {
@@ -43,10 +48,10 @@ public abstract class BenchmarkTarget<StreamType> {
 
     public abstract void sinkForLatency(DataStream<StreamType> stream);
 
-    public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in);
+    public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in, File resultFolder);
 
-    public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in) {
-        return in.map(new ThroughputMapper<>());
+    public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in, File resultFolder) {
+        return in.map(new ThroughputMapper<>(resultFolder));
     }
 
     protected static class ThroughputMapper<T> implements MapFunction<T, T> {
@@ -55,6 +60,13 @@ public abstract class BenchmarkTarget<StreamType> {
 
         private int count = 0;
         private long lastTimeStamp = -1;
+        private final Path resultPath;
+
+        public ThroughputMapper(File resultFolder) {
+            this.resultPath = resultFolder.toPath().resolve(UUID.randomUUID().toString()+".csv");
+            String[] header = new String[]{"resolution", "time"};
+            writeRow(header);
+        }
 
         @Override
         public T map(T t) throws Exception {
@@ -65,15 +77,20 @@ public abstract class BenchmarkTarget<StreamType> {
                     //First time
                 } else {
                     long diff = current - lastTimeStamp;
-                    writeRow(RESOLUTION, diff);
+                    writeRow(""+RESOLUTION, ""+diff);
                 }
                 lastTimeStamp = current;
             }
             return t;
         }
 
-        private void writeRow(Object... cells) {
-            //TODO
+        private void writeRow(String... cells) {
+            String lineToWrite = String.join(",", cells) + "\n";
+            try {
+                Files.write(resultPath, lineToWrite.getBytes(), StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -120,7 +137,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public DataStream<HBaseEvent> makeMapperForLatency(DataStream<HBaseEvent> in) {
+        public DataStream<HBaseEvent> makeMapperForLatency(DataStream<HBaseEvent> in, File resultFolder) {
             //TODO
             return null;
         }
@@ -171,7 +188,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public DataStream<Long> makeMapperForLatency(DataStream<Long> in) {
+        public DataStream<Long> makeMapperForLatency(DataStream<Long> in, File resultFolder) {
             return in.map((MapFunction<Long, Long>) value -> System.currentTimeMillis());
         }
 

@@ -15,6 +15,7 @@ import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.replication.ReplicationPeerDescription;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +27,11 @@ public class Main {
     public static final String CF_Name = "info";
 
     public static void main(String[] args) {
-        for (RunConfig runConfig : allRunConfigurations()) {
-            new Run(runConfig).run();
-        }
+//        TODO
+//        for (RunConfig runConfig : allRunConfigurations()) {
+//            new Run(runConfig).run();
+//        }
+        new Run(new RunConfig(4, 4, new BenchmarkGoal.Throughput(), new BenchmarkTarget.Source())).run();
     }
 
     public static class RunConfig {
@@ -50,6 +53,8 @@ public class Main {
         private String tableName;
         private final String id;
 
+        private final File resultFolder;
+
         public Run(RunConfig config) {
             this.config = config;
             this.id = String.join(
@@ -59,9 +64,11 @@ public class Main {
                     ""+config.numberOfColumns,
                     ""+config.parallelism,
                     UUID.randomUUID().toString());
+            resultFolder = new File("./results/"+this.id);
         }
 
         public void run() {
+            resultFolder.mkdirs();
             clearReplicationPeers();
             clearTables();
             createTable();
@@ -107,7 +114,7 @@ public class Main {
         private <T> JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = new StreamExecutionEnvironment();
             DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, id);
-            DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target);
+            DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target, resultFolder);
             config.goal.sinkStream(streamToSink, config.target);
             try {
                 return env.executeAsync(id);
