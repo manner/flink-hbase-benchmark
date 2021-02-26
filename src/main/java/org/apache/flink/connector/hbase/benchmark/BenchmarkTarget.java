@@ -1,12 +1,19 @@
 package org.apache.flink.connector.hbase.benchmark;
 
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.connector.sink.Sink;
 import org.apache.flink.api.connector.source.Source;
+import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public abstract class BenchmarkTarget {
@@ -91,24 +98,23 @@ public abstract class BenchmarkTarget {
 
         @Override
         public void makeDataForLatency(String tableName, int numberOfColumns) {
-            //TODO
+            // Shouldn't do anything. No need for creating data in HBase when testing the Sink only.
         }
 
         @Override
         public void makeDataForThroughput(String tableName, int numberOfColumns) {
-            //TODO
+            // Shouldn't do anything. No need for creating data in HBase when testing the Sink only.
         }
 
         @Override
         public org.apache.flink.api.connector.source.Source<?, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
-            //TODO
-            return null;
+            return new NumberSequenceSource(0,10000);
         }
 
         @Override
         public DataStream<?> makeMapperForThroughput(DataStream<?> in) {
-            //TODO
-            return null;
+            //WIP
+            return in.map((MapFunction<Long, Long>) value -> System.currentTimeMillis());
         }
 
         @Override
@@ -119,8 +125,7 @@ public abstract class BenchmarkTarget {
 
         @Override
         public org.apache.flink.api.connector.source.Source<?, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env) {
-            //TODO
-            return null;
+            return new NumberSequenceSource(0,10000);
         }
 
         @Override
