@@ -130,7 +130,13 @@ public abstract class BenchmarkTarget<StreamType> {
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id)
+                    .returns(new TypeHint<HBaseEvent>() {
+                        @Override
+                        public TypeInformation<HBaseEvent> getTypeInfo() {
+                            return super.getTypeInfo();
+                        }
+                    });
         }
 
         @Override
@@ -146,13 +152,7 @@ public abstract class BenchmarkTarget<StreamType> {
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id)
-                    .returns(new TypeHint<HBaseEvent>() {
-                        @Override
-                        public TypeInformation<HBaseEvent> getTypeInfo() {
-                            return super.getTypeInfo();
-                        }
-                    });
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
         }
 
         @Override
