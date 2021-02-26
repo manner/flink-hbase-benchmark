@@ -11,6 +11,8 @@ import org.apache.flink.connector.hbase.source.reader.HBaseEvent;
 import org.apache.flink.connector.hbase.source.reader.HBaseSourceDeserializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.DiscardingSink;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
@@ -103,7 +105,8 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public void sinkForThroughput(DataStream<HBaseEvent> stream) {
-            //TODO
+            SinkFunction<HBaseEvent> sink = new DiscardingSink<>();
+            stream.addSink(sink);
         }
 
         @Override
@@ -124,7 +127,8 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public void sinkForLatency(DataStream<HBaseEvent> stream) {
-            //TODO
+            SinkFunction<HBaseEvent> sink = new DiscardingSink<>();
+            stream.addSink(sink);
         }
 
 
