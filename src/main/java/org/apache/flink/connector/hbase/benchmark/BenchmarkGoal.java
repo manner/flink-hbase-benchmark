@@ -1,21 +1,21 @@
 package org.apache.flink.connector.hbase.benchmark;
 
-import org.apache.flink.api.connector.sink.Sink;
-import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
-import java.io.IOException;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
 public abstract class BenchmarkGoal {
 
     public abstract void augmentTableDescriptor(TableDescriptorBuilder basicTableDescriptor, BenchmarkTarget target);
+
     public abstract void makeData(String tableName, int numberOfColumns, BenchmarkTarget target);
 
-    public abstract <T> Source<T, ? ,?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target);
+    public abstract <T> DataStream<T> makeStreamFromSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target, String id);
+
     public abstract <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target);
-    public abstract <T> Sink<T, ?, ?, ?> makeSink(BenchmarkTarget<T> target);
+
+    public abstract <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target);
 
     public static class Throughput extends BenchmarkGoal {
         @Override
@@ -29,8 +29,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> Source<T, ?, ?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target) {
-            return target.makeSourceForThroughput(env);
+        public <T> DataStream<T> makeStreamFromSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target, String id) {
+            return target.makeStreamFromSourceForThroughput(env, id);
         }
 
         @Override
@@ -39,8 +39,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> Sink<T, ?, ?, ?> makeSink(BenchmarkTarget<T> target) {
-            return target.makeSinkForThroughput();
+        public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target) {
+            target.sinkForThroughput(in);
         }
     }
 
@@ -57,8 +57,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> Source<T, ?, ?> makeSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target) {
-            return target.makeSourceForLatency(env);
+        public <T> DataStream<T> makeStreamFromSource(StreamExecutionEnvironment env, BenchmarkTarget<T> target, String id) {
+            return target.makeStreamFromSourceForLatency(env, id);
         }
 
         @Override
@@ -67,8 +67,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> Sink<T, ?, ?, ?> makeSink(BenchmarkTarget<T> target) {
-            return target.makeSinkForLatency();
+        public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target) {
+            target.sinkForLatency(in);
         }
     }
 

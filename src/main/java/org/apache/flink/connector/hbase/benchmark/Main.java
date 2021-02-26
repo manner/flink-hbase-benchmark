@@ -1,13 +1,7 @@
 package org.apache.flink.connector.hbase.benchmark;
 
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.ReduceFunction;
-import org.apache.flink.api.connector.sink.Sink;
-import org.apache.flink.api.connector.source.Source;
-import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
 import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import org.apache.hadoop.conf.Configuration;
@@ -99,22 +93,20 @@ public class Main {
             tableName = config.target.createTableName();
             TableDescriptorBuilder basicTableDescriptor = basicTableDescriptor(tableName, config.numberOfColumns);
             config.goal.augmentTableDescriptor(basicTableDescriptor, config.target);
-            System.out.println("Creating table "+tableName+" ...");
+            System.out.println("Creating table " + tableName + " ...");
             Main.createTable(basicTableDescriptor);
         }
 
         private <T> JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = new StreamExecutionEnvironment();
-            Source<T, ?, ?> source = config.goal.makeSource(env, config.target);
-            DataStream<T> streamFromSource = env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, id);
             DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target);
-            Sink<T, ?, ?, ?> sink = config.goal.makeSink(config.target);
-            streamToSink.sinkTo(sink);
+            config.goal.sinkStream(streamToSink, config.target);
             try {
                 return env.executeAsync(id);
             } catch (Exception e) {
                 e.printStackTrace();
-                throw new RuntimeException("Starting flink in benchmark \""+id+"\" failed", e);
+                throw new RuntimeException("Starting flink in benchmark \"" + id + "\" failed", e);
             }
 
 //            StreamExecutionEnvironment env = new StreamExecutionEnvironment();
@@ -133,10 +125,10 @@ public class Main {
             try {
                 jobClient.getJobExecutionResult().get();
             } catch (Exception e) {
-                if(SuccessException.causedBySuccess(e)) {
+                if (SuccessException.causedBySuccess(e)) {
                     System.out.println("Successful execution");
                 } else {
-                    throw new RuntimeException("Running benchmark \""+id+"\" failed", e);
+                    throw new RuntimeException("Running benchmark \"" + id + "\" failed", e);
                 }
             }
         }

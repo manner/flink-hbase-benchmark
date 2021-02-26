@@ -1,5 +1,6 @@
 package org.apache.flink.connector.hbase.benchmark;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.connector.source.Boundedness;
 import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
@@ -32,7 +33,15 @@ public abstract class BenchmarkTarget<StreamType> {
 
     public abstract void makeDataForThroughput(String tableName, int numberOfColumns);
 
-    public abstract org.apache.flink.api.connector.source.Source<StreamType, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env);
+    public abstract DataStream<StreamType> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id);
+
+    public abstract DataStream<StreamType> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id);
+
+    public abstract void sinkForThroughput(DataStream<StreamType> stream);
+
+    public abstract void sinkForLatency(DataStream<StreamType> stream);
+
+    public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in);
 
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in) {
         return in.map(new ThroughputMapper<>());
@@ -47,7 +56,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public T map(T t) throws Exception {
-            count ++;
+            count++;
             if (count % RESOLUTION == 0) {
                 long current = System.currentTimeMillis();
                 if (lastTimeStamp < 0) {
@@ -66,16 +75,6 @@ public abstract class BenchmarkTarget<StreamType> {
         }
     }
 
-    public abstract org.apache.flink.api.connector.sink.Sink<StreamType, ?, ?, ?> makeSinkForThroughput();
-
-
-    public abstract org.apache.flink.api.connector.source.Source<StreamType, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env);
-
-    public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in);
-
-    public abstract org.apache.flink.api.connector.sink.Sink<StreamType, ?, ?, ?> makeSinkForLatency();
-
-
     public static class Source extends BenchmarkTarget<HBaseEvent> {
         @Override
         public void augmentTableDescriptorForLatency(TableDescriptorBuilder basicTableDescriptor) {
@@ -93,24 +92,28 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public org.apache.flink.api.connector.source.Source<HBaseEvent, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
-            return new HBaseSource<>(
+        public DataStream<HBaseEvent> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id) {
+            HBaseSource<HBaseEvent> source = new HBaseSource<>(
                     Boundedness.CONTINUOUS_UNBOUNDED,
                     new HBaseEventDeserializer(),
-                    "tableName",
+                    id,
                     Main.HBASE_CONFIG);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<HBaseEvent, ?, ?, ?> makeSinkForThroughput() {
+        public void sinkForThroughput(DataStream<HBaseEvent> stream) {
             //TODO
-            return null;
         }
 
         @Override
-        public org.apache.flink.api.connector.source.Source<HBaseEvent, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env) {
-            //TODO
-            return null;
+        public DataStream<HBaseEvent> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id) {
+            HBaseSource<HBaseEvent> source = new HBaseSource<>(
+                    Boundedness.CONTINUOUS_UNBOUNDED,
+                    new HBaseEventDeserializer(),
+                    id,
+                    Main.HBASE_CONFIG);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
         }
 
         @Override
@@ -120,9 +123,8 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<HBaseEvent, ?, ?, ?> makeSinkForLatency() {
+        public void sinkForLatency(DataStream<HBaseEvent> stream) {
             //TODO
-            return null;
         }
 
 
@@ -147,18 +149,19 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public org.apache.flink.api.connector.source.Source<Long, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
-            return new NumberSequenceSource(0, 10000);
+        public DataStream<Long> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id) {
+            NumberSequenceSource source = new NumberSequenceSource(0, 10000);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<Long, ?, ?, ?> makeSinkForThroughput() {
-            return new HBaseSink<>("tableName", new LongSerializer(), Main.HBASE_CONFIG);
-
+        public void sinkForThroughput(DataStream<Long> stream) {
+            HBaseSink<Long> sink = new HBaseSink<>("tableName", new LongSerializer(), Main.HBASE_CONFIG);
+            stream.sinkTo(sink);
         }
 
         @Override
-        public org.apache.flink.api.connector.source.Source<Long, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env) {
+        public DataStream<Long> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id) {
             //TODO make periodic return new NumberSequenceSource(0, 10000);
             return null;
         }
@@ -169,9 +172,9 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public org.apache.flink.api.connector.sink.Sink<Long, ?, ?, ?> makeSinkForLatency() {
-            //TODO
-            return null;
+        public void sinkForLatency(DataStream<Long> stream) {
+            HBaseSink<Long> sink = new HBaseSink<>("tableName", new LongSerializer(), Main.HBASE_CONFIG);
+            stream.sinkTo(sink);
         }
     }
 
