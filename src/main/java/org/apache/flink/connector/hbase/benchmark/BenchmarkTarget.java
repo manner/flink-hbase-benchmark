@@ -54,21 +54,19 @@ public abstract class BenchmarkTarget<StreamType> {
     public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in, File resultFolder);
 
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in, File resultFolder) {
-        return in.map(new ThroughputMapper<>(resultFolder, in.getType())).returns(in.getType());
+        return in.map(new ThroughputMapper<>(resultFolder));
     }
 
-    protected static class ThroughputMapper<T> implements MapFunction<T, T> , ResultTypeQueryable<T> {
+    protected static class ThroughputMapper<T> implements MapFunction<T, T> {
 
         public static final int RESOLUTION = 1000; //TODO think bigger
 
         private int count = 0;
         private long lastTimeStamp = -1;
         private final String resultPath;
-        private final TypeInformation<T> typeInfo;
 
-        public ThroughputMapper(File resultFolder, TypeInformation<T> typeInfo) {
+        public ThroughputMapper(File resultFolder) {
             this.resultPath = resultFolder.toPath().resolve(UUID.randomUUID().toString()+".csv").toAbsolutePath().toString();
-            this.typeInfo = typeInfo;
             try {
                 resultPath().toFile().createNewFile();
             } catch (IOException e) {
@@ -105,11 +103,6 @@ public abstract class BenchmarkTarget<StreamType> {
 
         private Path resultPath() {
             return Paths.get(resultPath);
-        }
-
-        @Override
-        public TypeInformation<T> getProducedType() {
-            return typeInfo;
         }
     }
 
