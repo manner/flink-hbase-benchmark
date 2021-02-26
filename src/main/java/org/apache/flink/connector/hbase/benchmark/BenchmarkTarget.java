@@ -132,7 +132,8 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public org.apache.flink.api.connector.source.Source<Long, ?, ?> makeSourceForLatency(StreamExecutionEnvironment env) {
-            return new NumberSequenceSource(0, 10000);
+            //TODO make periodic return new NumberSequenceSource(0, 10000);
+            return null;
         }
 
         @Override
