@@ -48,10 +48,17 @@ public class Main {
     public static class Run {
         public final RunConfig config;
         private String tableName;
-        private final String id = UUID.randomUUID().toString(); //TODO
+        private final String id;
 
         public Run(RunConfig config) {
             this.config = config;
+            this.id = String.join(
+                    "-",
+                    config.goal.getClass().getSimpleName(),
+                    config.target.getClass().getSimpleName(),
+                    ""+config.numberOfColumns,
+                    ""+config.parallelism,
+                    UUID.randomUUID().toString());
         }
 
         public void run() {
