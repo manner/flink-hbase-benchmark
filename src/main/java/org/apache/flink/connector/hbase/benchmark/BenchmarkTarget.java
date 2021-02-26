@@ -114,8 +114,8 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public DataStream<?> makeMapperForThroughput(DataStream<Long> in) {
-            //WIP
-            return in.map((MapFunction<Long, Long>) value -> System.currentTimeMillis());
+            //TODO
+            return null;
         }
 
         @Override
@@ -131,8 +131,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public DataStream<?> makeMapperForLatency(DataStream<Long> in) {
-            //TODO
-            return null;
+            return in.map((MapFunction<Long, Long>) value -> System.currentTimeMillis());
         }
 
         @Override
