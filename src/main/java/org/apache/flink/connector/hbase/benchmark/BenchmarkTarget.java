@@ -64,6 +64,11 @@ public abstract class BenchmarkTarget<StreamType> {
 
         public ThroughputMapper(File resultFolder) {
             this.resultPath = resultFolder.toPath().resolve(UUID.randomUUID().toString()+".csv");
+            try {
+                this.resultPath.toFile().createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             String[] header = new String[]{"resolution", "time"};
             writeRow(header);
         }
