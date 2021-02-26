@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class Main {
 
@@ -112,7 +113,7 @@ public class Main {
         }
 
         private <T> JobClient setupFlinkEnvironment() {
-            StreamExecutionEnvironment env = new StreamExecutionEnvironment();
+            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
             DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, id);
             DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target, resultFolder);
             config.goal.sinkStream(streamToSink, config.target);

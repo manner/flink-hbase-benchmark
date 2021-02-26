@@ -148,7 +148,7 @@ public abstract class BenchmarkTarget<StreamType> {
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class).returns(HBaseEvent.class);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class);
         }
 
         @Override
