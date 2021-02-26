@@ -81,7 +81,6 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public T map(T t) throws Exception {
-            System.out.println(count);
             count++;
             if (count % RESOLUTION == 0) {
                 long current = System.currentTimeMillis();
@@ -227,7 +226,6 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public HBaseEvent deserialize(HBaseEvent event) {
-            System.out.println(event.getCf());
             return event;
         }
     }
