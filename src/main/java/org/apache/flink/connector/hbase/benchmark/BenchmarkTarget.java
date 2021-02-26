@@ -29,7 +29,10 @@ public abstract class BenchmarkTarget<StreamType> {
     public abstract void makeDataForThroughput(String tableName, int numberOfColumns);
 
     public abstract org.apache.flink.api.connector.source.Source<StreamType,?,?> makeSourceForThroughput(StreamExecutionEnvironment env);
-    public abstract DataStream<?> makeMapperForThroughput(DataStream<StreamType> in);
+    public DataStream<?> makeMapperForThroughput(DataStream<StreamType> in) {
+        //TODO, common for both targets
+        return null;
+    }
     public abstract org.apache.flink.api.connector.sink.Sink<StreamType,?,?,?> makeSinkForThroughput(DataStream<?> in);
 
     public abstract org.apache.flink.api.connector.source.Source<StreamType,?,?> makeSourceForLatency(StreamExecutionEnvironment env);
@@ -54,12 +57,6 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public org.apache.flink.api.connector.source.Source<HBaseEvent, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
-            //TODO
-            return null;
-        }
-
-        @Override
-        public DataStream<?> makeMapperForThroughput(DataStream<HBaseEvent> in) {
             //TODO
             return null;
         }
@@ -110,12 +107,6 @@ public abstract class BenchmarkTarget<StreamType> {
         @Override
         public org.apache.flink.api.connector.source.Source<Long, ?, ?> makeSourceForThroughput(StreamExecutionEnvironment env) {
             return new NumberSequenceSource(0,10000);
-        }
-
-        @Override
-        public DataStream<?> makeMapperForThroughput(DataStream<Long> in) {
-            //TODO
-            return null;
         }
 
         @Override
