@@ -54,7 +54,8 @@ public abstract class BenchmarkTarget<StreamType> {
     public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in, File resultFolder);
 
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in, File resultFolder) {
-        return in.map(new ThroughputMapper<>(resultFolder, in.getType())).returns(in.getType());
+        //return in.map(new ThroughputMapper<>(resultFolder, in.getType())).returns(in.getType());
+        return in;
     }
 
     protected static class ThroughputMapper<T> implements MapFunction<T, T> , ResultTypeQueryable<T> {
