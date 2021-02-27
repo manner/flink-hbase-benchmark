@@ -116,9 +116,6 @@ public class Main {
 
         private <T> JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-            ExecutionConfig executionConfig = env.getConfig();
-            executionConfig.enableObjectReuse();
-
             DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, tableName);
             DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target, resultFolder);
             config.goal.sinkStream(streamToSink, config.target);
@@ -139,6 +136,7 @@ public class Main {
 
         private void createData() {
             config.goal.makeData(tableName, config.numberOfColumns, config.target);
+            System.out.println("Finished creating data");
         }
 
         private void waitForTermination(JobClient jobClient) {
