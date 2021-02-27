@@ -75,9 +75,9 @@ public class Main {
             clearReplicationPeers();
             clearTables();
             createTable();
+            createData();
             JobClient jobClient = setupFlinkEnvironment();
             //TODO wait for flink cluster to be up
-            createData();
             waitForTermination(jobClient);
             retrieveResults();
         }
@@ -136,7 +136,6 @@ public class Main {
 
         private void createData() {
             config.goal.makeData(tableName, config.numberOfColumns, config.target);
-            System.out.println("Finished creating data");
         }
 
         private void waitForTermination(JobClient jobClient) {
@@ -216,12 +215,15 @@ public class Main {
 
 
     public static void runHBasePerformanceEvaluator(String tableName, int noOfFamilies, int noOfRows, int noOfWriters) {
+        System.out.println("Starting creating data");
         try {
-            Runtime.getRuntime()
+            Process p = Runtime.getRuntime()
                     .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --nomapred sequentialWrite %d",
                             tableName, noOfFamilies, noOfRows, noOfWriters));
-        } catch (IOException e) {
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println("Finished creating data");
     }
 }
