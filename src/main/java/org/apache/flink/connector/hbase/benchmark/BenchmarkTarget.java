@@ -62,7 +62,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
     protected static class ThroughputMapper<T> implements MapFunction<T, T> {
 
-        public static final int RESOLUTION = 50000; //TODO think bigger
+        public static final int RESOLUTION = 100000; //TODO think bigger
 
         private int count = 0;
         private long lastTimeStamp = -1;
@@ -122,7 +122,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public void makeDataForThroughput(String tableName, int numberOfColumns) {
-            Main.runHBasePerformanceEvaluator(tableName, numberOfColumns, 100000, 1);
+            Main.runHBasePerformanceEvaluator(tableName, numberOfColumns, 1000000, 1);
         }
 
         @Override
