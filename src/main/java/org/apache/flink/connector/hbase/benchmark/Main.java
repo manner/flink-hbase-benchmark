@@ -1,5 +1,7 @@
 package org.apache.flink.connector.hbase.benchmark;
 
+import org.apache.flink.api.common.ExecutionConfig;
+import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -114,6 +116,9 @@ public class Main {
 
         private <T> JobClient setupFlinkEnvironment() {
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+            ExecutionConfig executionConfig = env.getConfig();
+            executionConfig.enableObjectReuse();
+
             DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, tableName);
             DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target, resultFolder);
             config.goal.sinkStream(streamToSink, config.target);
