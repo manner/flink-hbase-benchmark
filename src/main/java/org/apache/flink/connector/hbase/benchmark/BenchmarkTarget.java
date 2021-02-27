@@ -62,7 +62,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
     protected static class ThroughputMapper<T> implements MapFunction<T, T> {
 
-        public static final int RESOLUTION = 1000; //TODO think bigger
+        public static final int RESOLUTION = 50000; //TODO think bigger
 
         private int count = 0;
         private long lastTimeStamp = -1;
