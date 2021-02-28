@@ -20,6 +20,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -170,10 +171,10 @@ public class Main {
     public static List<RunConfig> allRunConfigurations() {
         List<RunConfig> configs = new ArrayList<>();
 
-        for (BenchmarkGoal goal : List.of(new BenchmarkGoal.Throughput(), new BenchmarkGoal.Latency())) {
-            for(BenchmarkTarget target : List.of(new BenchmarkTarget.Source(), new BenchmarkTarget.Sink())) {
-                for (int cols : List.of(1, 2, 10)) {
-                    for (int parallelism : List.of(1, 2, 8)) {
+        for (BenchmarkGoal goal : Arrays.asList(new BenchmarkGoal.Throughput(), new BenchmarkGoal.Latency())) {
+            for(BenchmarkTarget target : Arrays.asList(new BenchmarkTarget.Source(), new BenchmarkTarget.Sink())) {
+                for (int cols : Arrays.asList(1, 2, 10)) {
+                    for (int parallelism : Arrays.asList(1, 2, 8)) {
                         configs.add(new RunConfig(cols, parallelism, goal, target));
                     }
                 }
