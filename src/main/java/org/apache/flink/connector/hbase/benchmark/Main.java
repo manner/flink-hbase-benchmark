@@ -33,7 +33,7 @@ public class Main {
 //        for (RunConfig runConfig : allRunConfigurations()) {
 //            new Run(runConfig).run();
 //        }
-        new Run(new RunConfig(1, 1, new BenchmarkGoal.Latency(), new BenchmarkTarget.Sink())).run();
+        new Run(new RunConfig(1, 1, new BenchmarkGoal.Latency(), new BenchmarkTarget.Source())).run();
     }
 
     public static class RunConfig {
