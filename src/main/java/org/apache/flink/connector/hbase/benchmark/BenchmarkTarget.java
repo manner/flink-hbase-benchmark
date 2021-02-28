@@ -188,7 +188,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public DataStream<Long> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String tableName) {
-            NumberSequenceSource source = new NumberSequenceSource(0, 10000);
+            NumberSequenceSource source = new NumberSequenceSource(0, 10000000);
             return env.fromSource(source, WatermarkStrategy.noWatermarks(), tableName);
         }
 
