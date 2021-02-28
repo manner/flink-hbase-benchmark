@@ -17,7 +17,7 @@ public abstract class BenchmarkGoal {
 
     public abstract <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target, File resultFolder);
 
-    public abstract <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target);
+    public abstract <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName);
 
     public static class Throughput extends BenchmarkGoal {
         @Override
@@ -41,8 +41,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target) {
-            target.sinkForThroughput(in);
+        public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName) {
+            target.sinkForThroughput(in, tableName);
         }
     }
 
@@ -69,8 +69,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target) {
-            target.sinkForLatency(in);
+        public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName) {
+            target.sinkForLatency(in, tableName);
         }
     }
 

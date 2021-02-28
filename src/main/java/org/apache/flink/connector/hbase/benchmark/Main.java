@@ -119,7 +119,7 @@ public class Main {
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
             DataStream<T> streamFromSource = config.goal.makeStreamFromSource(env, config.target, tableName);
             DataStream<T> streamToSink = config.goal.makeMapper(streamFromSource, config.target, resultFolder);
-            config.goal.sinkStream(streamToSink, config.target);
+            config.goal.sinkStream(streamToSink, config.target, tableName);
             try {
                 return env.executeAsync(id);
             } catch (Exception e) {

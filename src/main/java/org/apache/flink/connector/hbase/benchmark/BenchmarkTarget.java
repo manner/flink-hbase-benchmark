@@ -45,13 +45,13 @@ public abstract class BenchmarkTarget<StreamType> {
 
     public abstract void makeDataForThroughput(String tableName, int numberOfColumns);
 
-    public abstract DataStream<StreamType> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id);
+    public abstract DataStream<StreamType> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String tableName);
 
-    public abstract DataStream<StreamType> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id);
+    public abstract DataStream<StreamType> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String tableName);
 
-    public abstract void sinkForThroughput(DataStream<StreamType> stream);
+    public abstract void sinkForThroughput(DataStream<StreamType> stream, String tableName);
 
-    public abstract void sinkForLatency(DataStream<StreamType> stream);
+    public abstract void sinkForLatency(DataStream<StreamType> stream, String tableName);
 
     public abstract DataStream<StreamType> makeMapperForLatency(DataStream<StreamType> in, File resultFolder);
 
@@ -127,27 +127,27 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public DataStream<HBaseEvent> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id) {
+        public DataStream<HBaseEvent> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String tableName) {
             HBaseSource<HBaseEvent> source = new HBaseSource<>(
                     new HBaseEventDeserializer(),
-                    id,
+                    tableName,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), tableName).returns(HBaseEvent.class);
         }
 
         @Override
-        public void sinkForThroughput(DataStream<HBaseEvent> stream) {
+        public void sinkForThroughput(DataStream<HBaseEvent> stream, String tableName) {
             SinkFunction<HBaseEvent> sink = new DiscardingSink<>();
             stream.addSink(sink);
         }
 
         @Override
-        public DataStream<HBaseEvent> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id) {
+        public DataStream<HBaseEvent> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String tableName) {
             HBaseSource<HBaseEvent> source = new HBaseSource<>(
                     new HBaseEventDeserializer(),
-                    id,
+                    tableName,
                     Main.HBASE_CONFIG);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id).returns(HBaseEvent.class);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), tableName).returns(HBaseEvent.class);
         }
 
         @Override
@@ -157,7 +157,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public void sinkForLatency(DataStream<HBaseEvent> stream) {
+        public void sinkForLatency(DataStream<HBaseEvent> stream, String tableName) {
             SinkFunction<HBaseEvent> sink = new DiscardingSink<>();
             stream.addSink(sink);
         }
@@ -187,19 +187,19 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public DataStream<Long> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id) {
+        public DataStream<Long> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String tableName) {
             NumberSequenceSource source = new NumberSequenceSource(0, 10000);
-            return env.fromSource(source, WatermarkStrategy.noWatermarks(), id);
+            return env.fromSource(source, WatermarkStrategy.noWatermarks(), tableName);
         }
 
         @Override
-        public void sinkForThroughput(DataStream<Long> stream) {
-            HBaseSink<Long> sink = new HBaseSink<>("tableName", new LongSerializer(), Main.HBASE_CONFIG);
+        public void sinkForThroughput(DataStream<Long> stream, String tableName) {
+            HBaseSink<Long> sink = new HBaseSink<>(tableName, new LongSerializer(), Main.HBASE_CONFIG);
             stream.sinkTo(sink);
         }
 
         @Override
-        public DataStream<Long> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id) {
+        public DataStream<Long> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String tableName) {
             //TODO make periodic return new NumberSequenceSource(0, 10000);
             return null;
         }
@@ -210,8 +210,8 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public void sinkForLatency(DataStream<Long> stream) {
-            HBaseSink<Long> sink = new HBaseSink<>("tableName", new LongSerializer(), Main.HBASE_CONFIG);
+        public void sinkForLatency(DataStream<Long> stream, String tableName) {
+            HBaseSink<Long> sink = new HBaseSink<>(tableName, new LongSerializer(), Main.HBASE_CONFIG);
             stream.sinkTo(sink);
         }
 
