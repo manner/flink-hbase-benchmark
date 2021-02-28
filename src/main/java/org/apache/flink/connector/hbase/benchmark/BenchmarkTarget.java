@@ -295,12 +295,12 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public byte[] serializeQualifier(Long aLong) {
-            return Bytes.toBytes(0);
+            return Bytes.toBytes("0");
         }
 
         @Override
         public byte[] serializeRowKey(Long aLong) {
-            return Bytes.toBytes(aLong);
+            return Bytes.toBytes(""+aLong);
         }
     }
 
