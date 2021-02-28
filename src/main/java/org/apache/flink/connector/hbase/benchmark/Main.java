@@ -35,7 +35,7 @@ public class Main {
 //        for (RunConfig runConfig : allRunConfigurations()) {
 //            new Run(runConfig).run();
 //        }
-        new Run(new RunConfig(1, 1, new BenchmarkGoal.Throughput(), new BenchmarkTarget.Sink())).run();
+        new Run(new RunConfig(1, 1, new BenchmarkGoal.Latency(), new BenchmarkTarget.Sink())).run();
     }
 
     public static class RunConfig {
