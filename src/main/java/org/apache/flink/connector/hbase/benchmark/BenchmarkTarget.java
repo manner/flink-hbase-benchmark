@@ -128,7 +128,6 @@ public abstract class BenchmarkTarget<StreamType> {
         @Override
         public DataStream<HBaseEvent> makeStreamFromSourceForThroughput(StreamExecutionEnvironment env, String id) {
             HBaseSource<HBaseEvent> source = new HBaseSource<>(
-                    Boundedness.CONTINUOUS_UNBOUNDED,
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
@@ -144,7 +143,6 @@ public abstract class BenchmarkTarget<StreamType> {
         @Override
         public DataStream<HBaseEvent> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String id) {
             HBaseSource<HBaseEvent> source = new HBaseSource<>(
-                    Boundedness.CONTINUOUS_UNBOUNDED,
                     new HBaseEventDeserializer(),
                     id,
                     Main.HBASE_CONFIG);
