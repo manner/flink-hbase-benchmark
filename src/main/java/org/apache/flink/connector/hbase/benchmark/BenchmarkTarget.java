@@ -66,7 +66,7 @@ public abstract class BenchmarkTarget<StreamType> {
         return in.map(new ThroughputMapper<>(resultFolder));
     }
 
-    public abstract void retrieveResultsForLatency(String tableName);
+    public abstract void retrieveResultsForLatency(String tableName, File resultFolder);
 
     public abstract Class<StreamType> streamTypeClass();
 
@@ -188,7 +188,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public void retrieveResultsForLatency(String tableName) {
+        public void retrieveResultsForLatency(String tableName, File resultFolder) {
             //TODO
         }
 
@@ -245,10 +245,11 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
-        public void retrieveResultsForLatency(String tableName) {
+        public void retrieveResultsForLatency(String tableName, File resultFolder) {
             try(
                     Connection connection = ConnectionFactory.createConnection(Main.HBASE_CONFIG)
             ) {
+                CSVWriter csvWriter = new CSVWriter(resultFolder, new String[]{"hbasetimestamp", "flinktimestamp", "difference"});
                 Scan scan = new Scan().addColumn(Bytes.toBytes(Main.CF_Name+"0"), Bytes.toBytes("0"));
                 ResultScanner scanner = connection.getTable(TableName.valueOf(tableName)).getScanner(scan);
                 Result next;
@@ -256,7 +257,8 @@ public abstract class BenchmarkTarget<StreamType> {
                     Cell cell = next.getColumnLatestCell(Bytes.toBytes(Main.CF_Name+"0"), Bytes.toBytes("0"));
                     long timeStamp = cell.getTimestamp();
                     long value = Bytes.toLong(CellUtil.cloneValue(cell));
-                    System.out.println(timeStamp+","+value+","+(timeStamp-value));
+                    csvWriter.writeRow(""+timeStamp, ""+value, ""+(timeStamp-value));
+                    System.out.println();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -328,6 +330,35 @@ public abstract class BenchmarkTarget<StreamType> {
         public byte[] serializeRowKey(Long aLong) {
             return Bytes.toBytes(""+aLong);
         }
+    }
+
+    public static class CSVWriter {
+
+            private final String resultPath;
+
+            public CSVWriter(File resultFolder, String[] header) {
+                this.resultPath = resultFolder.toPath().resolve(UUID.randomUUID().toString()+".csv").toAbsolutePath().toString();
+                try {
+                    resultPath().toFile().createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                writeRow(header);
+            }
+
+
+            public void writeRow(String... cells) {
+                String lineToWrite = String.join(",", cells) + "\n";
+                try {
+                    Files.write(resultPath(), lineToWrite.getBytes(), StandardOpenOption.APPEND);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            private Path resultPath() {
+                return Paths.get(resultPath);
+            }
     }
 
 }

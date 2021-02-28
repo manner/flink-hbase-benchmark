@@ -19,7 +19,7 @@ public abstract class BenchmarkGoal {
 
     public abstract <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName);
 
-    public abstract void retrieveResults(BenchmarkTarget target, String tableName);
+    public abstract void retrieveResults(BenchmarkTarget target, String tableName, File resultFolder);
 
     public static class Throughput extends BenchmarkGoal {
         @Override
@@ -48,7 +48,7 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public void retrieveResults(BenchmarkTarget target, String tableName) {
+        public void retrieveResults(BenchmarkTarget target, String tableName, File resultFolder) {
             // Results are written by mapper
         }
     }
@@ -81,8 +81,8 @@ public abstract class BenchmarkGoal {
         }
 
         @Override
-        public void retrieveResults(BenchmarkTarget target, String tableName) {
-            target.retrieveResultsForLatency(tableName);
+        public void retrieveResults(BenchmarkTarget target, String tableName, File resultFolder) {
+            target.retrieveResultsForLatency(tableName, resultFolder);
         }
     }
 

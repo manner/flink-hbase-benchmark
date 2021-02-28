@@ -150,7 +150,7 @@ public class Main {
         }
 
         private void retrieveResults() {
-            config.goal.retrieveResults(config.target, tableName);
+            config.goal.retrieveResults(config.target, tableName, resultFolder);
         }
     }
 
