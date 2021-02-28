@@ -23,6 +23,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -228,7 +229,7 @@ public abstract class BenchmarkTarget<StreamType> {
         }
     }
 
-    public static class LongSerializer implements HBaseSinkSerializer<Long> {
+    public static class LongSerializer implements HBaseSinkSerializer<Long>, Serializable {
 
         @Override
         public byte[] serializePayload(Long aLong) {
