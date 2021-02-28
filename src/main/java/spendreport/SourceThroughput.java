@@ -73,7 +73,6 @@ public class SourceThroughput {
 
         HBaseSource<HBaseEvent> source =
                 new HBaseSource<>(
-                        Boundedness.CONTINUOUS_UNBOUNDED,
                         sourceDeserializer,
                         DEFAULT_TABLE_NAME + "-in",
                         configuration);

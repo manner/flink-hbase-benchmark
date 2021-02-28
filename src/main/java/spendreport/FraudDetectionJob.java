@@ -74,7 +74,6 @@ public class FraudDetectionJob {
 
         HBaseSource<Tuple3<String, String, String>> source =
                 new HBaseSource<>(
-                        Boundedness.CONTINUOUS_UNBOUNDED,
                         sourceDeserializer,
                         DEFAULT_TABLE_NAME + "-in",
                         configuration);
