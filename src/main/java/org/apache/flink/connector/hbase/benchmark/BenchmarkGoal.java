@@ -19,6 +19,8 @@ public abstract class BenchmarkGoal {
 
     public abstract <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName);
 
+    public abstract void retrieveResults(BenchmarkTarget target, String tableName);
+
     public static class Throughput extends BenchmarkGoal {
         @Override
         public void augmentTableDescriptor(TableDescriptorBuilder basicTableDescriptor, BenchmarkTarget target) {
@@ -43,6 +45,11 @@ public abstract class BenchmarkGoal {
         @Override
         public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName) {
             target.sinkForThroughput(in, tableName);
+        }
+
+        @Override
+        public void retrieveResults(BenchmarkTarget target, String tableName) {
+            // Results are written by mapper
         }
     }
 
@@ -71,6 +78,11 @@ public abstract class BenchmarkGoal {
         @Override
         public <T> void sinkStream(DataStream<T> in, BenchmarkTarget<T> target, String tableName) {
             target.sinkForLatency(in, tableName);
+        }
+
+        @Override
+        public void retrieveResults(BenchmarkTarget target, String tableName) {
+            target.retrieveResultsForLatency(tableName);
         }
     }
 

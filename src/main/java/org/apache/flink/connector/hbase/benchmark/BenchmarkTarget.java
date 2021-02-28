@@ -17,8 +17,10 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.DiscardingSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
-import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
-import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.File;
@@ -59,6 +61,8 @@ public abstract class BenchmarkTarget<StreamType> {
     public DataStream<StreamType> makeMapperForThroughput(DataStream<StreamType> in, File resultFolder) {
         return in.map(new ThroughputMapper<>(resultFolder));
     }
+
+    public abstract void retrieveResultsForLatency(String tableName);
 
     public abstract Class<StreamType> streamTypeClass();
 
@@ -158,6 +162,11 @@ public abstract class BenchmarkTarget<StreamType> {
         }
 
         @Override
+        public void retrieveResultsForLatency(String tableName) {
+            //TODO
+        }
+
+        @Override
         public void sinkForLatency(DataStream<HBaseEvent> stream, String tableName) {
             SinkFunction<HBaseEvent> sink = new DiscardingSink<>();
             stream.addSink(sink);
@@ -207,6 +216,25 @@ public abstract class BenchmarkTarget<StreamType> {
         @Override
         public DataStream<Long> makeMapperForLatency(DataStream<Long> in, File resultFolder) {
             return in.map((MapFunction<Long, Long>) value -> System.currentTimeMillis());
+        }
+
+        @Override
+        public void retrieveResultsForLatency(String tableName) {
+            try(
+                    Connection connection = ConnectionFactory.createConnection(Main.HBASE_CONFIG)
+            ) {
+                Scan scan = new Scan();
+                ResultScanner scanner = connection.getTable(TableName.valueOf(tableName)).getScanner(scan);
+                Result next;
+                while((next = scanner.next()) != null) {
+                    Cell cell = next.getColumnLatestCell(Bytes.toBytes(Main.CF_Name+"0"), Bytes.toBytes("0"));
+                    long timeStamp = cell.getTimestamp();
+                    long value = Bytes.toLong(CellUtil.cloneValue(cell));
+                    System.out.println(timeStamp+","+value+","+(timeStamp-value));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
