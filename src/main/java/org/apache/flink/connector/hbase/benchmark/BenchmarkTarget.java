@@ -223,7 +223,7 @@ public abstract class BenchmarkTarget<StreamType> {
             try(
                     Connection connection = ConnectionFactory.createConnection(Main.HBASE_CONFIG)
             ) {
-                Scan scan = new Scan();
+                Scan scan = new Scan().addColumn(Bytes.toBytes(Main.CF_Name+"0"), Bytes.toBytes("0"));
                 ResultScanner scanner = connection.getTable(TableName.valueOf(tableName)).getScanner(scan);
                 Result next;
                 while((next = scanner.next()) != null) {
