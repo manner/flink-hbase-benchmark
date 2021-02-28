@@ -238,7 +238,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public byte[] serializeColumnFamily(Long aLong) {
-            return Bytes.toBytes(Main.CF_Name);
+            return Bytes.toBytes(Main.CF_Name + 0);
         }
 
         @Override
