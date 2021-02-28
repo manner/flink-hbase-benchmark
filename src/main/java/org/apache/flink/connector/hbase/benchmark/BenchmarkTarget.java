@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Iterator;
 import java.util.UUID;
 
 public abstract class BenchmarkTarget<StreamType> {
@@ -200,8 +201,7 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public DataStream<Long> makeStreamFromSourceForLatency(StreamExecutionEnvironment env, String tableName) {
-            //TODO make periodic return new NumberSequenceSource(0, 10000);
-            return null;
+            return env.fromCollection(new LongIterator(), Long.class);
         }
 
         @Override
@@ -218,6 +218,30 @@ public abstract class BenchmarkTarget<StreamType> {
         @Override
         public Class<Long> streamTypeClass() {
             return Long.class;
+        }
+    }
+
+    private static class LongIterator implements Iterator<Long>, Serializable {
+
+        private long i = 0;
+
+        {
+            System.out.println("Constructed LongIterator");
+        }
+
+        @Override
+        public boolean hasNext() {
+            return i <= 1000;
+        }
+
+        @Override
+        public Long next() {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return i++;
         }
     }
 
