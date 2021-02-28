@@ -2,11 +2,7 @@ package org.apache.flink.connector.hbase.benchmark;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.typeinfo.TypeHint;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.connector.source.Boundedness;
 import org.apache.flink.api.connector.source.lib.NumberSequenceSource;
-import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.connector.hbase.sink.HBaseSink;
 import org.apache.flink.connector.hbase.sink.HBaseSinkSerializer;
 import org.apache.flink.connector.hbase.source.HBaseSource;
@@ -20,7 +16,15 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.File;
@@ -123,7 +127,23 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public void makeDataForLatency(String tableName, int numberOfColumns) {
-            //TODO
+            long count = 0;
+            try {
+                Connection connection = ConnectionFactory.createConnection(Main.HBASE_CONFIG);
+                Table table = connection.getTable(TableName.valueOf(tableName));
+                while (count < 10000) {
+                    Put put = new Put(Bytes.toBytes(count++));
+                    put.addColumn(
+                            Bytes.toBytes(Main.CF_Name + "0"),
+                            Bytes.toBytes("0"),
+                            Bytes.toBytes("MCFOOBARINDAHOUSE"));
+                    table.put(put);
+                    Thread.sleep(10);
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
         }
 
         @Override
@@ -157,8 +177,14 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public DataStream<HBaseEvent> makeMapperForLatency(DataStream<HBaseEvent> in, File resultFolder) {
-            //TODO
-            return null;
+            return in.map((MapFunction<HBaseEvent, HBaseEvent>) value -> {
+                long hbaseTimestamp = value.getTimestamp();
+                long flinkTimestamp = System.currentTimeMillis();
+
+                long diff = flinkTimestamp - hbaseTimestamp;
+                System.out.println(hbaseTimestamp + "," + flinkTimestamp + ',' + diff);
+                return value;
+            });
         }
 
         @Override

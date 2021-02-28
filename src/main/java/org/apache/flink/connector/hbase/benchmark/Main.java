@@ -74,9 +74,9 @@ public class Main {
             clearReplicationPeers();
             clearTables();
             createTable();
-            createData();
             JobClient jobClient = setupFlinkEnvironment();
             //TODO wait for flink cluster to be up
+            createData();
             waitForTermination(jobClient);
             retrieveResults();
         }
