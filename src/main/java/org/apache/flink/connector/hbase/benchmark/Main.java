@@ -33,7 +33,7 @@ public class Main {
 //        for (RunConfig runConfig : allRunConfigurations()) {
 //            new Run(runConfig).run();
 //        }
-        new Run(new RunConfig(1, 1, new BenchmarkGoal.Latency(), new BenchmarkTarget.Source())).run();
+        new Run(new RunConfig(1, 1, new BenchmarkGoal.Latency(), new Source())).run();
     }
 
     public static class RunConfig {
@@ -168,7 +168,7 @@ public class Main {
         List<RunConfig> configs = new ArrayList<>();
 
         for (BenchmarkGoal goal : Arrays.asList(new BenchmarkGoal.Throughput(), new BenchmarkGoal.Latency())) {
-            for(BenchmarkTarget target : Arrays.asList(new BenchmarkTarget.Source(), new BenchmarkTarget.Sink())) {
+            for(BenchmarkTarget target : Arrays.asList(new Source(), new Sink())) {
                 for (int cols : Arrays.asList(1, 2, 10)) {
                     for (int parallelism : Arrays.asList(1, 2, 8)) {
                         configs.add(new RunConfig(cols, parallelism, goal, target));

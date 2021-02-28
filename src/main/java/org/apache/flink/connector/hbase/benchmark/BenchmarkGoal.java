@@ -1,11 +1,18 @@
 package org.apache.flink.connector.hbase.benchmark;
 
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 
 public abstract class BenchmarkGoal {
 
@@ -39,7 +46,7 @@ public abstract class BenchmarkGoal {
 
         @Override
         public <T> DataStream<T> makeMapper(DataStream<T> in, BenchmarkTarget<T> target, File resultFolder) {
-            return target.makeMapperForThroughput(in, resultFolder);
+            return in.map(new ThroughputMapper<>(resultFolder));
         }
 
         @Override
@@ -83,6 +90,56 @@ public abstract class BenchmarkGoal {
         @Override
         public void retrieveResults(BenchmarkTarget target, String tableName, File resultFolder) {
             target.retrieveResultsForLatency(tableName, resultFolder);
+        }
+    }
+
+
+    public static class ThroughputMapper<T> implements MapFunction<T, T> {
+
+        public static final int RESOLUTION = 100000; //TODO think bigger
+
+        private int count = 0;
+        private long lastTimeStamp = -1;
+        private final String resultPath;
+
+        public ThroughputMapper(File resultFolder) {
+            this.resultPath = resultFolder.toPath().resolve(UUID.randomUUID().toString()+".csv").toAbsolutePath().toString();
+            try {
+                resultPath().toFile().createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String[] header = new String[]{"resolution", "time"};
+            writeRow(header);
+        }
+
+        @Override
+        public T map(T t) throws Exception {
+            count++;
+            if (count % RESOLUTION == 0) {
+                long current = System.currentTimeMillis();
+                if (lastTimeStamp < 0) {
+                    //First time
+                } else {
+                    long diff = current - lastTimeStamp;
+                    writeRow(""+RESOLUTION, ""+diff);
+                }
+                lastTimeStamp = current;
+            }
+            return t;
+        }
+
+        private void writeRow(String... cells) {
+            String lineToWrite = String.join(",", cells) + "\n";
+            try {
+                Files.write(resultPath(), lineToWrite.getBytes(), StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private Path resultPath() {
+            return Paths.get(resultPath);
         }
     }
 
