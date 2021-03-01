@@ -52,13 +52,13 @@ public abstract class BenchmarkTarget<StreamType> {
 
         @Override
         public boolean hasNext() {
-            return i <= 1000;
+            return i <= 20000;
         }
 
         @Override
         public Long next() {
             try {
-                Thread.sleep(10);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
