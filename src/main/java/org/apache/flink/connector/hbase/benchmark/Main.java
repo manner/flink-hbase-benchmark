@@ -33,7 +33,7 @@ public class Main {
 //        for (RunConfig runConfig : allRunConfigurations()) {
 //            new Run(runConfig).run();
 //        }
-        new Run(new RunConfig(1, 1, new BenchmarkGoal.Latency(), new Source())).run();
+        new Run(new RunConfig(1, 1, new BenchmarkGoal.Throughput(), new Source())).run();
     }
 
     public static class RunConfig {
@@ -215,7 +215,7 @@ public class Main {
         System.out.println("Starting creating data");
         try {
             Process p = Runtime.getRuntime()
-                    .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --nomapred sequentialWrite %d",
+                    .exec(String.format("hbase pe --table=%s --families=%d --rows=%d --valueSize=1 sequentialWrite %d",
                             tableName, noOfFamilies, noOfRows, noOfWriters));
             p.waitFor();
         } catch (IOException | InterruptedException e) {
