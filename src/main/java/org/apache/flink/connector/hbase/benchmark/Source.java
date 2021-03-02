@@ -45,7 +45,7 @@ public class Source extends BenchmarkTarget<HBaseEvent> {
 
     @Override
     public void makeDataForThroughput(String tableName, int numberOfColumns) {
-        Main.runHBasePerformanceEvaluator(tableName, numberOfColumns, 25_000_001, 1);
+        Main.runHBasePerformanceEvaluator(tableName, numberOfColumns, 100_000_001, 1);
     }
 
     @Override
