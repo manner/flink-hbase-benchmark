@@ -36,7 +36,7 @@ public class Sink extends BenchmarkTarget<Long> {
     @Override
     public DataStream<Long> makeStreamFromSourceForThroughput(
             StreamExecutionEnvironment env, String tableName) {
-        NumberSequenceSource source = new NumberSequenceSource(0, 25_000_001);
+        NumberSequenceSource source = new NumberSequenceSource(0, 100_000_001);
         return env.fromSource(source, WatermarkStrategy.noWatermarks(), tableName);
     }
 
