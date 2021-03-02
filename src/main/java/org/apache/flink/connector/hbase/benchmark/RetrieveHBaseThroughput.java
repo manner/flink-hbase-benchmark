@@ -42,7 +42,7 @@ public class RetrieveHBaseThroughput {
         try (Connection connection = ConnectionFactory.createConnection(Main.HBASE_CONFIG)) {
             CSVWriter csvWriter =
                     new CSVWriter(
-                            new File("results"), new String[]{"rowId", "HbaseTimestamp", "diff"});
+                            new File("results"), new String[]{"rowId", "HbaseTimestamp", "diff", "size"});
             Table table = connection.getTable(TableName.valueOf(tableName));
             long lastTimestamp = 0;
             for (int i = 0; i < 100_000_001; i += 1_000_000) {
@@ -51,8 +51,9 @@ public class RetrieveHBaseThroughput {
                 Result result = table.get(get);
                 Cell cell = result.getColumnLatestCell(Bytes.toBytes(Main.CF_Name + "0"), Bytes.toBytes("0"));
                 long timeStamp = cell.getTimestamp();
+                long resultSize = Result.getTotalSizeOfCells(result);
                 if (lastTimestamp > 0) {
-                    csvWriter.writeRow("" + i, "" + timeStamp, "" + (timeStamp - lastTimestamp));
+                    csvWriter.writeRow("" + i, "" + timeStamp, "" + (timeStamp - lastTimestamp), resultSize + "");
                 }
                 lastTimestamp = timeStamp;
             }
