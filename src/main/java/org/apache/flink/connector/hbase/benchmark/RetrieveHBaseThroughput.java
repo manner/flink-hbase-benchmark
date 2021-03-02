@@ -42,10 +42,10 @@ public class RetrieveHBaseThroughput {
         try (Connection connection = ConnectionFactory.createConnection(Main.HBASE_CONFIG)) {
             CSVWriter csvWriter =
                     new CSVWriter(
-                            new File("results"), new String[]{"hbasetimestamp", "flinktimestamp", "difference"});
+                            new File("results"), new String[]{"rowId", "HbaseTimestamp", "diff"});
             Table table = connection.getTable(TableName.valueOf(tableName));
             long lastTimestamp = 0;
-            for (int i = 0; i < 25_000_001; i += 1_000_000) {
+            for (int i = 0; i < 100_000_001; i += 1_000_000) {
                 String paddedRowKey = String.format("%026d", i);
                 Get get = new Get(Bytes.toBytes(paddedRowKey));
                 Result result = table.get(get);
